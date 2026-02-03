@@ -1821,9 +1821,9 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                                     style={{
                                                                         padding: '4px 12px',
                                                                         borderRadius: '4px',
-                                                                        border: '1px solid ' + (viewingDetails.leg.hotelStatus === 'reservado' ? 'var(--primary)' : 'transparent'),
-                                                                        background: viewingDetails.leg.hotelStatus === 'reservado' ? 'var(--primary)' : 'transparent',
-                                                                        color: viewingDetails.leg.hotelStatus === 'reservado' ? '#000' : 'var(--text-muted)',
+                                                                        border: '1px solid ' + (viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : 'transparent'),
+                                                                        background: viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : 'transparent',
+                                                                        color: viewingDetails.leg.hotelStatus === 'reservado' ? '#fff' : 'var(--text-muted)',
                                                                         cursor: 'pointer',
                                                                         fontSize: '0.75rem',
                                                                         fontWeight: 'bold',
