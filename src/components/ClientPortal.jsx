@@ -86,7 +86,8 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
     };
 
     const getStatusInfo = (status, request = null) => {
-        if (status === 'novo' && request?.oldData) {
+        // Verifica se é uma edição (novo + oldData) ou status explícito de alteração
+        if ((status === 'novo' && request?.oldData) || status === 'alteracao_solicitada') {
             return { label: 'Alteração Solicitada', color: '#a855f7', icon: <Edit size={16} /> }; // Lilac
         }
         switch (status) {
@@ -94,8 +95,9 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
             case 'pendente': return { label: 'Pendente', color: '#fbbf24', icon: <AlertCircle size={16} /> };
             case 'recusado': return { label: 'Recusado', color: '#f87171', icon: <ShieldAlert size={16} /> };
             case 'cancelamento': return { label: 'Cancelamento Solicitado', color: '#ef4444', icon: <ShieldAlert size={16} /> };
+            // Caso explícito já coberto no if acima, mas mantido por segurança
             case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#a855f7', icon: <Edit size={16} /> };
-            case 'cancelado': return { label: 'Voo Cancelado', color: '#94a3b8', icon: <ShieldAlert size={16} /> }; // Grey
+            case 'cancelado': return { label: 'Voo Cancelado', color: '#94a3b8', icon: <ShieldAlert size={16} /> };
             default: return { label: 'Em Análise', color: '#60a5fa', icon: <Clock size={16} /> };
         }
     };
