@@ -1755,7 +1755,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                         <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1rem', letterSpacing: '0.5px' }}>HOTEL PARA A TRIPULAÇÃO:</div>
                                                         <div style={{ display: 'flex', gap: '8px' }}>
                                                             <button
-                                                                onClick={() => updateLeg('hasHotel', true)}
+                                                                onClick={() => updateLeg({ hasHotel: true, hotelStatus: viewingDetails.leg.hotelStatus || 'pendente' })}
                                                                 style={{
                                                                     padding: '4px 16px',
                                                                     borderRadius: '4px',
@@ -1774,7 +1774,8 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                                     updateLeg({
                                                                         hasHotel: false,
                                                                         hotelName: '',
-                                                                        hotelDetails: ''
+                                                                        hotelDetails: '',
+                                                                        hotelStatus: ''
                                                                     });
                                                                 }}
                                                                 style={{
@@ -1805,16 +1806,16 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                                     style={{
                                                                         padding: '4px 12px',
                                                                         borderRadius: '4px',
-                                                                        border: '1px solid ' + ((viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#ef4444' : 'transparent'),
-                                                                        background: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#ef4444' : 'transparent',
-                                                                        color: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#fff' : 'var(--text-muted)',
+                                                                        border: '1px solid ' + ((viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#fbbf24' : 'transparent'),
+                                                                        background: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#fbbf24' : 'transparent',
+                                                                        color: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#000' : 'var(--text-muted)',
                                                                         cursor: 'pointer',
                                                                         fontSize: '0.75rem',
                                                                         fontWeight: 'bold',
                                                                         transition: 'all 0.2s'
                                                                     }}
                                                                 >
-                                                                    PENDENTE
+                                                                    EM ANÁLISE
                                                                 </button>
                                                                 <button
                                                                     onClick={() => updateLeg('hotelStatus', 'reservado')}
@@ -1879,7 +1880,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                         </div>
                                                         <div style={{ display: 'flex', gap: '8px', marginLeft: '12px' }}>
                                                             <button
-                                                                onClick={() => updateLeg('hasFbo', true)}
+                                                                onClick={() => updateLeg({ hasFbo: true, fboStatus: viewingDetails.leg.fboStatus || 'pendente' })}
                                                                 style={{
                                                                     padding: '4px 16px',
                                                                     borderRadius: '4px',
@@ -1930,16 +1931,16 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                                     style={{
                                                                         padding: '4px 12px',
                                                                         borderRadius: '4px',
-                                                                        border: '1px solid ' + ((viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#ef4444' : 'transparent'),
-                                                                        background: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#ef4444' : 'transparent',
-                                                                        color: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#fff' : 'var(--text-muted)',
+                                                                        border: '1px solid ' + ((viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#fbbf24' : 'transparent'),
+                                                                        background: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#fbbf24' : 'transparent',
+                                                                        color: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#000' : 'var(--text-muted)',
                                                                         cursor: 'pointer',
                                                                         fontSize: '0.75rem',
                                                                         fontWeight: 'bold',
                                                                         transition: 'all 0.2s'
                                                                     }}
                                                                 >
-                                                                    PENDENTE
+                                                                    EM ANÁLISE
                                                                 </button>
                                                                 <button
                                                                     onClick={() => updateLeg('fboStatus', 'agendado')}
