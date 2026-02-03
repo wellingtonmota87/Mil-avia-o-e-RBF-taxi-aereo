@@ -1185,7 +1185,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
                                                             <span style={{ color: 'var(--text-muted)' }}>Data:</span>
-                                                            <input type="date" className="input-field" style={{ padding: '4px 8px', height: '32px' }} value={viewingDetails.leg.date} onChange={(e) => updateLeg('date', e.target.value)} />
+                                                            <input type="date" className="input-field" style={{ padding: '4px 8px', height: '32px', border: isModified('date', viewingDetails.leg.date, viewingDetails.idx) ? '1px solid #ef4444' : undefined, color: isModified('date', viewingDetails.leg.date, viewingDetails.idx) ? '#ef4444' : undefined }} value={viewingDetails.leg.date} onChange={(e) => updateLeg('date', e.target.value)} />
                                                         </div>
                                                         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
                                                             <span style={{ color: 'var(--text-muted)' }}>Origem:</span>
@@ -1193,7 +1193,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                                 <input
                                                                     type="text"
                                                                     className="input-field"
-                                                                    style={{ padding: '4px 8px', height: '32px', width: '100%' }}
+                                                                    style={{ padding: '4px 8px', height: '32px', width: '100%', border: isModified('origin', viewingDetails.leg.origin, viewingDetails.idx) ? '1px solid #ef4444' : undefined, color: isModified('origin', viewingDetails.leg.origin, viewingDetails.idx) ? '#ef4444' : undefined }}
                                                                     value={viewingDetails.leg.origin}
                                                                     onChange={(e) => updateLeg('origin', e.target.value)}
                                                                     onFocus={() => viewingDetails.leg.origin && updateLeg('origin', viewingDetails.leg.origin)}
@@ -1239,7 +1239,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                                 <input
                                                                     type="text"
                                                                     className="input-field"
-                                                                    style={{ padding: '4px 8px', height: '32px', width: '100%' }}
+                                                                    style={{ padding: '4px 8px', height: '32px', width: '100%', border: isModified('destination', viewingDetails.leg.destination, viewingDetails.idx) ? '1px solid #ef4444' : undefined, color: isModified('destination', viewingDetails.leg.destination, viewingDetails.idx) ? '#ef4444' : undefined }}
                                                                     value={viewingDetails.leg.destination}
                                                                     onChange={(e) => updateLeg('destination', e.target.value)}
                                                                     onFocus={() => viewingDetails.leg.destination && updateLeg('destination', viewingDetails.leg.destination)}
@@ -1281,7 +1281,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                         </div>
                                                         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
                                                             <span style={{ color: 'var(--text-muted)' }}>Horário:</span>
-                                                            <input type="time" className="input-field" style={{ padding: '4px 8px', height: '32px' }} value={viewingDetails.leg.time} onChange={(e) => updateLeg('time', e.target.value)} />
+                                                            <input type="time" className="input-field" style={{ padding: '4px 8px', height: '32px', border: isModified('time', viewingDetails.leg.time, viewingDetails.idx) ? '1px solid #ef4444' : undefined, color: isModified('time', viewingDetails.leg.time, viewingDetails.idx) ? '#ef4444' : undefined }} value={viewingDetails.leg.time} onChange={(e) => updateLeg('time', e.target.value)} />
                                                         </div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
