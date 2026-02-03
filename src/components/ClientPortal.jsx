@@ -87,7 +87,7 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
 
     const getStatusInfo = (status, request = null) => {
         if (status === 'novo' && request?.oldData) {
-            return { label: 'Atualização Solicitada', color: '#a855f7', icon: <Edit size={16} /> }; // Lilac
+            return { label: 'Alteração Solicitada', color: '#a855f7', icon: <Edit size={16} /> }; // Lilac
         }
         switch (status) {
             case 'aprovado': return { label: 'Aprovado', color: '#34d399', icon: <CheckCircle size={16} /> };

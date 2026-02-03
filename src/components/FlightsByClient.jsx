@@ -37,13 +37,14 @@ export default function FlightsByClient({ requests, onBack, onSelectRequest }) {
 
     const getStatusInfo = (status, request = null) => {
         if (status === 'novo' && request?.oldData) {
-            return { label: 'Edição Solicitada', color: '#a855f7' };
+            return { label: 'Alteração Solicitada', color: '#a855f7' };
         }
         switch (status) {
             case 'aprovado': return { label: 'Aprovado', color: '#34d399' };
             case 'pendente': return { label: 'Pendência', color: '#fbbf24' };
             case 'concluido': return { label: 'Concluído', color: '#60a5fa' };
             case 'recusado': return { label: 'Recusado', color: '#f87171' };
+            case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#a855f7' };
             case 'cancelamento': return { label: 'Cancelamento Solicitado', color: '#dc2626' };
             case 'cancelado': return { label: 'Voo Cancelado', color: '#94a3b8' };
             default: return { label: 'Nova Solicitação', color: '#f87171', isNew: true };
