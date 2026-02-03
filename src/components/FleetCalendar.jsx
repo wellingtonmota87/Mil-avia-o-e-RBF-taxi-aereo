@@ -558,72 +558,84 @@ export default function FleetCalendar({ requests = [], onBack }) {
                             </button>
 
                             <div style={{ padding: '40px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px' }}>
-                                    <div style={{
-                                        background: getAircraftStyle(selectedFlight.aircraft?.name).light,
-                                        padding: '20px',
-                                        borderRadius: '20px'
-                                    }}>
-                                        <Plane size={36} color={getAircraftStyle(selectedFlight.aircraft?.name).main} />
-                                    </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+                                    {/* Status Badge Above Aircraft */}
                                     <div>
-                                        <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#fff' }}>{selectedFlight.aircraft?.name}</h2>
-                                        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem' }}>{selectedFlight.aircraft?.type}</p>
+                                        <div style={{
+                                            display: 'inline-block',
+                                            padding: '6px 16px',
+                                            borderRadius: '100px',
+                                            background: getStatusInfo(selectedFlight?.status || 'pendente').bg,
+                                            color: getStatusInfo(selectedFlight?.status || 'pendente').color,
+                                            fontSize: '0.75rem',
+                                            fontWeight: '800',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.05em',
+                                            border: `1px solid ${getStatusInfo(selectedFlight?.status || 'pendente').color}40`
+                                        }}>
+                                            {getStatusInfo(selectedFlight?.status || 'pendente').label}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                        <div style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 'bold', lineHeight: '1.2' }}>{selectedFlight.aircraft?.name}</div>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.2' }}>{selectedFlight.aircraft?.type}</div>
+                                    </div>
+
+                                    <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '500' }}>
+                                        {selectedFlight.name || selectedFlight.userName || 'Cliente Externo'}
                                     </div>
                                 </div>
 
-                                <div style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '8px 16px',
-                                    borderRadius: '100px',
-                                    background: getStatusInfo(selectedFlight.status).bg,
-                                    color: getStatusInfo(selectedFlight.status).color,
-                                    fontSize: '0.75rem',
-                                    fontWeight: '800',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.1em',
-                                    marginBottom: '32px'
-                                }}>
-                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }}></div>
-                                    {getStatusInfo(selectedFlight.status).label}
-                                </div>
-
-                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '32px' }}>
-                                    <h4 style={{ margin: '0 0 20px 0', fontSize: '1rem', color: 'var(--primary)', fontWeight: '700' }}>Trechos do Voo</h4>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+                                    <h4 style={{ margin: '0 0 16px 0', fontSize: '1rem', color: 'var(--primary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Trechos do Voo</h4>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                         {selectedFlight.legs.map((leg, idx) => (
                                             <div
                                                 key={idx}
                                                 onClick={() => setViewingDetails(selectedFlight)}
-                                                className="glass-morphism"
                                                 style={{
                                                     background: 'rgba(255,255,255,0.02)',
-                                                    border: '1px solid rgba(255,255,255,0.05)',
-                                                    padding: '20px',
-                                                    borderRadius: '20px',
+                                                    border: '1px solid rgba(255,255,255,0.08)',
+                                                    padding: '12px 16px',
+                                                    borderRadius: '16px',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.3s ease'
+                                                    transition: 'all 0.3s ease',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
                                                 }}
+                                                onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                                onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
                                             >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                                        <span style={{ fontSize: '1.1rem', color: '#fff' }}>{leg.origin}</span>
-                                                        <span style={{ color: 'var(--primary)', opacity: 0.6 }}>→</span>
-                                                        <span style={{ fontSize: '1.1rem', color: '#fff' }}>{leg.destination}</span>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.8rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ background: 'var(--primary)', color: '#000', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem' }}>{idx + 1}</span>
+                                                    {idx + 1}ª Etapa
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                                                    <div>
+                                                        <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: '600' }}>{leg.origin}</span>
                                                     </div>
-                                                    <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                                        {leg.time}
+                                                    <div>
+                                                        <span style={{ color: '#fff', fontSize: '0.75rem', fontWeight: '600' }}>{leg.destination}</span>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                                        <CalendarIcon size={14} />
-                                                        {formatDate(leg.date)}
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '12px', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px' }}>
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#9ca3af', fontSize: '0.6rem' }}>
+                                                            <CalendarIcon size={10} color="#9ca3af" />
+                                                            {formatDate(leg.date)}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: '600' }}>
-                                                        Ver Detalhes →
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#9ca3af', fontSize: '0.6rem' }}>
+                                                            <Clock size={10} color="#9ca3af" />
+                                                            {leg.time}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ color: 'var(--primary)', fontSize: '0.6rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        VER DETALHES →
                                                     </div>
                                                 </div>
                                             </div>
@@ -640,11 +652,12 @@ export default function FleetCalendar({ requests = [], onBack }) {
                             </div>
                         </motion.div>
                     </div>
-                )}
-            </AnimatePresence>
+                )
+                }
+            </AnimatePresence >
 
             {/* Read-only Detail Modal */}
-            <AnimatePresence>
+            < AnimatePresence >
                 {viewingDetails && (
                     <div style={{
                         position: 'fixed',
@@ -704,8 +717,8 @@ export default function FleetCalendar({ requests = [], onBack }) {
                                         <Info size={20} />
                                         <span style={{ fontWeight: '800', letterSpacing: '0.1em', fontSize: '0.75rem', textTransform: 'uppercase' }}>DETALHES DA SOLICITAÇÃO</span>
                                     </div>
-                                    <h2 style={{ fontSize: '2.5rem', margin: 0, color: '#fff' }}>{viewingDetails.aircraft?.name}</h2>
-                                    <p style={{ margin: '8px 0 0 0', color: 'var(--text-muted)', fontSize: '1.1rem' }}>Solicitante: {viewingDetails.name} • Protocolo #{viewingDetails.id}</p>
+                                    <h2 style={{ fontSize: '1.8rem', margin: 0, color: '#fff' }}>{viewingDetails.aircraft?.name}</h2>
+                                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '1rem' }}>{viewingDetails.name}</p>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <div style={{
@@ -725,23 +738,22 @@ export default function FleetCalendar({ requests = [], onBack }) {
                             </div>
 
                             {/* Itinerary - High Tech Style */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 {viewingDetails.legs.map((leg, idx) => (
                                     <div key={idx} style={{
                                         background: 'rgba(255,255,255,0.02)',
                                         borderRadius: '24px',
-                                        padding: '32px',
+                                        padding: '24px',
                                         border: '1px solid rgba(255,255,255,0.05)',
                                         fontFamily: 'monospace'
                                     }}>
                                         {/* ETAPA Header */}
-                                        <div style={{ marginBottom: '24px', fontFamily: 'monospace' }}>
-                                            <div style={{ color: 'var(--primary)', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                        <div style={{ marginBottom: '16px', fontFamily: 'monospace' }}>
+                                            <div style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '8px' }}>
                                                 {`|> ${idx + 1}ª ETAPA <|`}
                                             </div>
-                                            <div style={{ color: 'rgba(255,255,255,0.1)', letterSpacing: '2px' }}>-----------------</div>
 
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px', fontSize: '1.1rem' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '12px', fontSize: '0.9rem' }}>
                                                 <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Data:</span> <span style={{ color: '#fff' }}>{formatDate(leg.date)}</span></p>
                                                 <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Origem:</span> <span style={{ color: '#fff' }}>{leg.origin}</span></p>
                                                 <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>DESTINO:</span> <span style={{ color: '#fff' }}>{leg.destination}</span></p>
@@ -749,24 +761,24 @@ export default function FleetCalendar({ requests = [], onBack }) {
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                             {/* Passageiros Section */}
-                                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Users size={16} /> PASSAGEIROS ({leg.passengers}):
+                                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Users size={14} /> PASSAGEIROS ({leg.passengers}):
                                                 </div>
-                                                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.6' }}>
+                                                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.5' }}>
                                                     {Array.isArray(leg.passengerData) && leg.passengerData.length > 0 ? (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                             {leg.passengerData.map((p, i) => (
-                                                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '4px' }}>
-                                                                    <span>{i + 1}. {p.name || '---'}</span>
+                                                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '2px' }}>
+                                                                    <span>{p.name || '---'}</span>
                                                                     <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{p.document || ''}</span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{leg.passengerList || 'Nenhum passageiro listado.'}</p>
+                                                        <p style={{ margin: 0 }}>{leg.passengerList || 'Nenhum passageiro listado.'}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -776,13 +788,24 @@ export default function FleetCalendar({ requests = [], onBack }) {
                                                 <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <Coffee size={16} /> COMISSARIA:
                                                 </div>
-                                                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                                                    {leg.catering || 'Catering padrão solicitado.'}
+                                                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.6' }}>
+                                                    {leg.catering ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                            {leg.catering.split(/[\n,]/).filter(item => item.trim() !== '').map((item, i) => (
+                                                                <div key={i} style={{ display: 'flex', gap: '8px' }}>
+                                                                    <span style={{ color: 'var(--primary)' }}>•</span>
+                                                                    <span>{item.trim()}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p style={{ margin: 0 }}>Catering padrão solicitado.</p>
+                                                    )}
                                                 </div>
                                             </div>
 
                                             {/* FBO Section */}
-                                            <div style={{ gridColumn: 'span 2', background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                 <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <MapPin size={16} /> FBO {leg.fboCity || ''}:
                                                 </div>
@@ -796,22 +819,33 @@ export default function FleetCalendar({ requests = [], onBack }) {
                             {/* Tripulação do Voo Section */}
                             {viewingDetails.crew && viewingDetails.crew.some(c => c.name) && (
                                 <div style={{
-                                    marginTop: '40px',
-                                    padding: '32px',
+                                    marginTop: '24px',
+                                    padding: '24px',
                                     background: 'rgba(255, 255, 255, 0.02)',
                                     borderRadius: '24px',
                                     border: '1px solid rgba(255,255,255,0.05)'
                                 }}>
-                                    <h4 style={{ margin: '0 0 16px 0', fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Fingerprint size={16} /> TRIPULAÇÃO DO VOO
+                                    <h4 style={{ margin: '0 0 12px 0', fontSize: '0.7rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Fingerprint size={14} /> TRIPULAÇÃO DO VOO
                                     </h4>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: 'monospace' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontFamily: 'monospace' }}>
                                         {viewingDetails.crew.map((member, idx) => member.name && (
-                                            <div key={idx} style={{ fontSize: '1.1rem', color: '#fff' }}>
-                                                <span style={{ color: 'var(--text-muted)' }}>{idx + 1} - </span>
-                                                <span>{member.name}</span>
-                                                <span style={{ color: 'var(--text-muted)' }}> - </span>
-                                                <span style={{ color: 'var(--primary)' }}>{member.anac || '---'}</span>
+                                            <div key={idx} style={{
+                                                fontSize: '0.9rem',
+                                                color: '#fff',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                                paddingBottom: '4px'
+                                            }}>
+                                                <span style={{ width: '50%' }}>
+                                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{idx + 1} - </span>
+                                                    <span>{member.name}</span>
+                                                </span>
+                                                <span style={{ fontWeight: 'bold' }}>
+                                                    <span style={{ color: 'var(--primary)' }}>Canac </span>
+                                                    <span style={{ color: '#fff' }}>{member.anac || '---'}</span>
+                                                </span>
                                             </div>
                                         ))}
                                     </div>
@@ -820,14 +854,14 @@ export default function FleetCalendar({ requests = [], onBack }) {
 
                             {viewingDetails.observation && (
                                 <div style={{
-                                    marginTop: '40px',
-                                    padding: '32px',
+                                    marginTop: '24px',
+                                    padding: '24px',
                                     background: 'rgba(201, 168, 106, 0.05)',
                                     borderRadius: '24px',
                                     border: '1px solid rgba(201, 168, 106, 0.1)'
                                 }}>
-                                    <h4 style={{ margin: '0 0 12px 0', fontSize: '0.75rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace' }}>OBSERVAÇÕES DA COORDENAÇÃO</h4>
-                                    <p style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontStyle: 'italic' }}>{viewingDetails.observation}</p>
+                                    <h4 style={{ margin: '0 0 8px 0', fontSize: '0.7rem', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace' }}>OBSERVAÇÕES DA COORDENAÇÃO</h4>
+                                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontStyle: 'italic', lineHeight: '1.5' }}>{viewingDetails.observation}</p>
                                 </div>
                             )}
 
@@ -841,7 +875,7 @@ export default function FleetCalendar({ requests = [], onBack }) {
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
-        </div>
+            </AnimatePresence >
+        </div >
     );
 }

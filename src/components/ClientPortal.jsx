@@ -5,7 +5,7 @@ import FleetCalendar from './FleetCalendar';
 import { formatDateTime } from '../utils/dateUtils';
 import { brazilianAirports } from '../data/airports';
 
-export default function ClientPortal({ requests, currentUser, onLogin, onLogout, onNewRequest, onUpdateRequest, onBack }) {
+export default function ClientPortal({ requests = [], currentUser, onLogin, onLogout, onNewRequest, onUpdateRequest, onEditRequest, onBack }) {
     const [isRegistering, setIsRegistering] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -163,18 +163,18 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                     <ArrowLeft size={20} /> Voltar para o Dashboard
                 </button>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-morphism" style={{ padding: '40px', borderRadius: '32px' }}>
-                    <div style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '32px', marginBottom: '40px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-morphism" style={{ padding: '24px', borderRadius: '32px' }}>
+                    <div style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '24px', marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                             <div>
-                                <h2 style={{ fontSize: '2rem', marginBottom: '16px' }}>
-                                    {isEditing ? 'Página de Alterações' : `Detalhes da Solicitação - ${statusInfo.label}`}
+                                <h2 style={{ fontSize: '1.6rem', marginBottom: '12px' }}>
+                                    {isEditing ? 'Página de Alterações' : `Detalhes da Solicitação`}
                                 </h2>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <p style={{ margin: 0, fontSize: '1.1rem' }}>
-                                        <span style={{ color: 'var(--text-muted)' }}>Cliente:</span> <strong>{currentUser.name}</strong>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                                    <p style={{ margin: 0, fontSize: '0.95rem' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>Status:</span> <strong style={{ color: statusInfo.color }}>{statusInfo.label}</strong>
                                     </p>
-                                    <p style={{ margin: 0, fontSize: '1.1rem' }}>
+                                    <p style={{ margin: 0, fontSize: '0.95rem' }}>
                                         <span style={{ color: 'var(--text-muted)' }}>Aeronave:</span> <strong>{selectedRequest.aircraft?.name}</strong>
                                     </p>
                                 </div>
@@ -185,7 +185,7 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                                     onClick={handleStartEdit}
                                     className="premium-button"
                                     style={{
-                                        padding: '12px 24px',
+                                        padding: '10px 20px',
                                         background: 'rgba(52, 211, 153, 0.1)',
                                         borderRadius: '12px',
                                         border: '1px solid #34d399',
@@ -193,10 +193,11 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                                         fontWeight: 'bold',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px'
+                                        gap: '8px',
+                                        fontSize: '0.9rem'
                                     }}
                                 >
-                                    <Edit size={18} /> Solicitar Alteração
+                                    <Edit size={16} /> Solicitar Alteração
                                 </button>
                             )}
                         </div>
@@ -206,12 +207,12 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                         <div style={{ marginBottom: '24px', padding: '16px', background: 'rgba(52, 211, 153, 0.1)', border: '1px solid #34d399', borderRadius: '12px', color: '#34d399', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <AlertCircle size={20} />
-                                <span>Edite os detalhes abaixo e clique em Solicitar para enviar.</span>
+                                <span style={{ fontSize: '0.9rem' }}>Edite os detalhes abaixo e clique em Enviar Solicitação para notificar a coordenação.</span>
                             </div>
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <button
                                     onClick={() => { setIsEditing(false); setEditingRequest(null); }}
-                                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'transparent', color: '#fff', cursor: 'pointer' }}
+                                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'transparent', color: '#fff', cursor: 'pointer', fontSize: '0.85rem' }}
                                 >
                                     Cancelar
                                 </button>
@@ -231,7 +232,8 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                                         background: hasChanges() ? '#34d399' : 'rgba(52, 211, 153, 0.2)',
                                         color: hasChanges() ? '#000' : 'rgba(255, 255, 255, 0.3)',
                                         border: hasChanges() ? 'none' : '1px solid rgba(52, 211, 153, 0.2)',
-                                        cursor: hasChanges() ? 'pointer' : 'not-allowed'
+                                        cursor: hasChanges() ? 'pointer' : 'not-allowed',
+                                        fontSize: '0.85rem'
                                     }}
                                 >
                                     Enviar Solicitação
@@ -241,74 +243,76 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                     )}
 
                     {selectedRequest.observation && (
-                        <div style={{ marginBottom: '32px', padding: '24px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid #fbbf24', borderRadius: '20px', color: '#fbbf24' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                <AlertCircle /> Mensagem da Coordenação:
+                        <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid #fbbf24', borderRadius: '20px', color: '#fbbf24' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', fontWeight: 'bold', fontSize: '1rem' }}>
+                                <AlertCircle size={20} /> Mensagem da Coordenação:
                             </div>
-                            <p style={{ margin: 0, fontStyle: 'italic', lineHeight: '1.6' }}>"{selectedRequest.observation}"</p>
+                            <p style={{ margin: 0, fontStyle: 'italic', lineHeight: '1.6', fontSize: '0.95rem' }}>"{selectedRequest.observation}"</p>
                         </div>
                     )}
 
-                    <h3 style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.5rem' }}>
-                        <Calendar size={24} color="var(--primary)" /> Itinerário
+                    <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.3rem' }}>
+                        <Calendar size={20} color="var(--primary)" /> Itinerário
                     </h3>
 
-                    {selectedRequest.legs?.map((leg, idx) => (
-                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '24px', padding: '32px', marginBottom: '24px', border: '1px solid var(--glass-border)' }}>
-                            <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <h4 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ background: 'var(--primary)', color: '#000', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 'bold' }}>{idx + 1}</span>
-                                    {idx + 1}ª ETAPA - <span style={{ fontWeight: 'normal' }}>{formatDateTime(leg.date, leg.time)}</span>
-                                </h4>
-                            </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {selectedRequest.legs?.map((leg, idx) => (
+                            <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '24px', padding: '20px', border: '1px solid var(--glass-border)' }}>
+                                <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ background: 'var(--primary)', color: '#000', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>{idx + 1}</span>
+                                        {idx + 1}ª ETAPA - <span style={{ fontWeight: 'normal', fontSize: '0.95rem' }}>{formatDateTime(leg.date, leg.time)}</span>
+                                    </h4>
+                                </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-                                <p style={{ margin: 0, fontSize: '1.1rem' }}>
-                                    <span style={{ color: 'var(--text-muted)' }}>ORIGEM:</span> {leg.origin}
-                                </p>
-                                <p style={{ margin: 0, fontSize: '1.1rem' }}>
-                                    <span style={{ color: 'var(--text-muted)' }}>DESTINO:</span> {leg.destination}
-                                </p>
-                            </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '20px' }}>
+                                    <div style={{ fontSize: '0.9rem', color: '#fff' }}>
+                                        <span style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.75rem' }}>ORIGEM:</span> {leg.origin}
+                                    </div>
+                                    <div style={{ fontSize: '0.9rem', color: '#fff' }}>
+                                        <span style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.75rem' }}>DESTINO:</span> {leg.destination}
+                                    </div>
+                                </div>
 
-                            <button
-                                onClick={() => setViewingDetails({ type: 'full', leg, idx })}
-                                className="premium-button"
-                                style={{ width: '100%', justifyContent: 'center', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)', height: '52px' }}
-                            >
-                                {isEditing ? (
-                                    <><Edit size={18} /> Fazer Mudanças</>
-                                ) : (
-                                    <><FileText size={18} /> Detalhes do Voo</>
-                                )}
-                            </button>
-                        </div>
-                    ))}
+                                <button
+                                    onClick={() => setViewingDetails({ type: 'full', leg, idx })}
+                                    className="premium-button"
+                                    style={{ width: '100%', justifyContent: 'center', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)', height: '44px', fontSize: '0.9rem' }}
+                                >
+                                    {isEditing ? (
+                                        <><Edit size={16} /> Fazer Mudanças</>
+                                    ) : (
+                                        <><FileText size={16} /> Detalhes do Voo</>
+                                    )}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </motion.div>
 
                 <AnimatePresence>
                     {viewingDetails && (
                         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '20px' }}>
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="glass-morphism" style={{ padding: '40px', borderRadius: '32px', maxWidth: '600px', width: '100%', position: 'relative' }}>
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="glass-morphism" style={{ padding: '32px', borderRadius: '32px', maxWidth: '600px', width: '100%', position: 'relative' }}>
                                 <button
                                     onClick={() => setViewingDetails(null)}
                                     style={{ position: 'absolute', top: '24px', right: '24px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                                 >
                                     <X size={24} />
                                 </button>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
-                                    <div style={{ background: 'var(--primary-light)', padding: '12px', borderRadius: '12px' }}>
-                                        {viewingDetails.type === 'pax' ? <Users size={24} color="var(--primary)" /> :
-                                            viewingDetails.type === 'catering' ? <Coffee size={24} color="var(--primary)" /> :
-                                                <Plane size={24} color="var(--primary)" />}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+                                    <div style={{ background: 'var(--primary-light)', padding: '10px', borderRadius: '12px' }}>
+                                        {viewingDetails.type === 'pax' ? <Users size={20} color="var(--primary)" /> :
+                                            viewingDetails.type === 'catering' ? <Coffee size={20} color="var(--primary)" /> :
+                                                <Plane size={20} color="var(--primary)" />}
                                     </div>
                                     <div>
-                                        <h3 style={{ margin: 0 }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.2rem' }}>
                                             {viewingDetails.type === 'pax' ? 'Lista de Passageiros' :
                                                 viewingDetails.type === 'catering' ? 'Detalhes do Catering' :
                                                     'Detalhes Completos do Voo'}
                                         </h3>
-                                        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Trecho {viewingDetails.idx + 1}: {viewingDetails.leg.origin} → {viewingDetails.leg.destination}</p>
+                                        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem' }}>Trecho {viewingDetails.idx + 1}: {viewingDetails.leg.origin} → {viewingDetails.leg.destination}</p>
                                     </div>
                                 </div>
                                 <div style={{
@@ -316,276 +320,139 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                                     borderRadius: '16px',
                                     padding: '24px',
                                     border: '1px solid var(--glass-border)',
-                                    maxHeight: '500px',
+                                    maxHeight: '400px',
                                     overflowY: 'auto',
                                     boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
                                 }}>
                                     {viewingDetails.type === 'full' ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', fontFamily: 'monospace' }}>
-                                            {/* 1ª ETAPA Header */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: 'monospace' }}>
                                             <div style={{ background: 'rgba(255, 193, 7, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 193, 7, 0.05)' }}>
-                                                <div style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                                <div style={{ color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px' }}>
                                                     {`|> ${viewingDetails.idx + 1}ª ETAPA <|`}
                                                 </div>
-                                                <div style={{ color: 'var(--glass-border)', marginTop: '-8px', marginBottom: '16px' }}>---------------------</div>
 
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     {isEditing ? (
-                                                        <>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                             <div className="form-group">
-                                                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Data</label>
+                                                                <label className="form-label" style={{ fontSize: '0.75rem' }}>Data</label>
                                                                 <div style={{ position: 'relative' }}>
-                                                                    <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                                                                    <input type="date" className="input-field" value={editingRequest?.legs[viewingDetails.idx]?.date || ''} onChange={(e) => handleLegUpdate(viewingDetails.idx, 'date', e.target.value)} style={{ paddingLeft: '40px' }} />
+                                                                    <Calendar size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                                                    <input type="date" className="input-field" value={editingRequest?.legs?.[viewingDetails.idx]?.date || ''} onChange={(e) => handleLegUpdate(viewingDetails.idx, 'date', e.target.value)} style={{ paddingLeft: '40px', fontSize: '0.85rem' }} />
                                                                 </div>
                                                             </div>
                                                             <div className="form-group">
-                                                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Origem</label>
+                                                                <label className="form-label" style={{ fontSize: '0.75rem' }}>Origem</label>
                                                                 <div style={{ position: 'relative' }}>
-                                                                    <MapPin size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                                                    <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                                                     <input
                                                                         type="text"
                                                                         className="input-field"
-                                                                        value={editingRequest?.legs[viewingDetails.idx]?.origin || ''}
+                                                                        value={editingRequest?.legs?.[viewingDetails.idx]?.origin || ''}
                                                                         onChange={(e) => handleLegUpdate(viewingDetails.idx, 'origin', e.target.value)}
-                                                                        style={{ paddingLeft: '40px' }}
-                                                                        onFocus={() => editingRequest?.legs[viewingDetails.idx]?.origin && handleLegUpdate(viewingDetails.idx, 'origin', editingRequest.legs[viewingDetails.idx].origin)}
+                                                                        style={{ paddingLeft: '40px', fontSize: '0.85rem' }}
                                                                     />
-                                                                    {activeAutocomplete.index === viewingDetails.idx && activeAutocomplete.field === 'origin' && activeAutocomplete.results.length > 0 && (
-                                                                        <div className="autocomplete-dropdown" style={{
-                                                                            position: 'absolute',
-                                                                            top: '100%',
-                                                                            left: 0,
-                                                                            right: 0,
-                                                                            zIndex: 1000,
-                                                                            background: '#1a1a1a',
-                                                                            border: '1px solid var(--glass-border)',
-                                                                            borderRadius: '8px',
-                                                                            marginTop: '4px',
-                                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                                                                            maxHeight: '200px',
-                                                                            overflowY: 'auto'
-                                                                        }}>
-                                                                            {activeAutocomplete.results.map((ap) => (
-                                                                                <div
-                                                                                    key={ap.icao}
-                                                                                    onClick={() => selectAirport(viewingDetails.idx, 'origin', ap)}
-                                                                                    style={{
-                                                                                        padding: '8px 12px',
-                                                                                        cursor: 'pointer',
-                                                                                        borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                                                                        fontSize: '0.85rem'
-                                                                                    }}
-                                                                                    onMouseEnter={(e) => e.target.style.background = 'rgba(251, 191, 36, 0.1)'}
-                                                                                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                                                                >
-                                                                                    {ap.label}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="form-group">
-                                                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Destino</label>
+                                                                <label className="form-label" style={{ fontSize: '0.75rem' }}>Destino</label>
                                                                 <div style={{ position: 'relative' }}>
-                                                                    <MapPin size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                                                    <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                                                     <input
                                                                         type="text"
                                                                         className="input-field"
-                                                                        value={editingRequest?.legs[viewingDetails.idx]?.destination || ''}
+                                                                        value={editingRequest?.legs?.[viewingDetails.idx]?.destination || ''}
                                                                         onChange={(e) => handleLegUpdate(viewingDetails.idx, 'destination', e.target.value)}
-                                                                        style={{ paddingLeft: '40px' }}
-                                                                        onFocus={() => editingRequest?.legs[viewingDetails.idx]?.destination && handleLegUpdate(viewingDetails.idx, 'destination', editingRequest.legs[viewingDetails.idx].destination)}
+                                                                        style={{ paddingLeft: '40px', fontSize: '0.85rem' }}
                                                                     />
-                                                                    {activeAutocomplete.index === viewingDetails.idx && activeAutocomplete.field === 'destination' && activeAutocomplete.results.length > 0 && (
-                                                                        <div className="autocomplete-dropdown" style={{
-                                                                            position: 'absolute',
-                                                                            top: '100%',
-                                                                            left: 0,
-                                                                            right: 0,
-                                                                            zIndex: 1000,
-                                                                            background: '#1a1a1a',
-                                                                            border: '1px solid var(--glass-border)',
-                                                                            borderRadius: '8px',
-                                                                            marginTop: '4px',
-                                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                                                                            maxHeight: '200px',
-                                                                            overflowY: 'auto'
-                                                                        }}>
-                                                                            {activeAutocomplete.results.map((ap) => (
-                                                                                <div
-                                                                                    key={ap.icao}
-                                                                                    onClick={() => selectAirport(viewingDetails.idx, 'destination', ap)}
-                                                                                    style={{
-                                                                                        padding: '8px 12px',
-                                                                                        cursor: 'pointer',
-                                                                                        borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                                                                        fontSize: '0.85rem'
-                                                                                    }}
-                                                                                    onMouseEnter={(e) => e.target.style.background = 'rgba(251, 191, 36, 0.1)'}
-                                                                                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                                                                >
-                                                                                    {ap.label}
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="form-group">
-                                                                <label className="form-label" style={{ fontSize: '0.8rem' }}>Horário</label>
+                                                                <label className="form-label" style={{ fontSize: '0.75rem' }}>Horário</label>
                                                                 <div style={{ position: 'relative' }}>
-                                                                    <Clock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                                                                    <input type="time" className="input-field" value={editingRequest?.legs[viewingDetails.idx]?.time || ''} onChange={(e) => handleLegUpdate(viewingDetails.idx, 'time', e.target.value)} style={{ paddingLeft: '40px' }} />
+                                                                    <Clock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                                                    <input type="time" className="input-field" value={editingRequest?.legs?.[viewingDetails.idx]?.time || ''} onChange={(e) => handleLegUpdate(viewingDetails.idx, 'time', e.target.value)} style={{ paddingLeft: '40px', fontSize: '0.85rem' }} />
                                                                 </div>
                                                             </div>
-                                                        </>
+                                                        </div>
                                                     ) : (
-                                                        <>
-                                                            <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Data e Horário:</span> {formatDateTime(viewingDetails.leg.date, viewingDetails.leg.time)}</p>
-                                                            <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Origem:</span> {viewingDetails.leg.origin}</p>
-                                                            <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>DESTINO:</span> {viewingDetails.leg.destination}</p>
-                                                        </>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
+                                                            <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>Data e Horário:</span> {formatDateTime(viewingDetails.leg.date, viewingDetails.leg.time)}</p>
+                                                            <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>ORIGEM:</span> {viewingDetails.leg.origin}</p>
+                                                            <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>DESTINO:</span> {viewingDetails.leg.destination}</p>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Passageiros Section */}
                                             <div style={{ background: 'rgba(255, 193, 7, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 193, 7, 0.05)' }}>
-                                                <div style={{
-                                                    color: 'var(--primary)',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '1rem',
-                                                    letterSpacing: '0.5px',
-                                                    marginBottom: '8px',
-                                                    borderLeft: '3px solid var(--primary)',
-                                                    paddingLeft: '10px'
-                                                }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px', borderLeft: '3px solid var(--primary)', paddingLeft: '10px' }}>
                                                     PASSAGEIROS:
                                                 </div>
-                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
                                                     {isEditing ? (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            <div style={{ position: 'relative' }}>
-                                                                <Users size={18} style={{ position: 'absolute', left: '12px', top: '16px', color: 'var(--text-muted)' }} />
-                                                                <textarea
-                                                                    className="input-field"
-                                                                    rows="4"
-                                                                    value={editingRequest?.legs[viewingDetails.idx]?.passengerList || ''}
-                                                                    onChange={(e) => handleLegUpdate(viewingDetails.idx, 'passengerList', e.target.value)}
-                                                                    placeholder="Edite a lista de passageiros aqui..."
-                                                                    style={{ paddingLeft: '40px' }}
-                                                                />
-                                                            </div>
-                                                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>Edite os nomes e documentos.</p>
-                                                        </div>
+                                                        <textarea
+                                                            className="input-field"
+                                                            rows="4"
+                                                            value={editingRequest?.legs[viewingDetails.idx]?.passengerList || ''}
+                                                            onChange={(e) => handleLegUpdate(viewingDetails.idx, 'passengerList', e.target.value)}
+                                                            placeholder="Edite a lista de passageiros aqui..."
+                                                            style={{ fontSize: '0.85rem' }}
+                                                        />
                                                     ) : (
-                                                        <>
-                                                            {viewingDetails.leg.isEmptyLeg ? (
-                                                                <div style={{ textAlign: 'center', padding: '12px' }}>
-                                                                    <p style={{ color: 'var(--primary)', fontWeight: 'bold', margin: '0 0 4px 0', fontSize: '1.2rem' }}>VOO DE TRANSLADO</p>
-                                                                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>Nenhum passageiro a bordo para este trecho.</p>
-                                                                </div>
-                                                            ) : Array.isArray(viewingDetails.leg.passengerData) && viewingDetails.leg.passengerData.length > 0 ? (
-                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                                    {viewingDetails.leg.passengerData.map((p, i) => (
-                                                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: i === viewingDetails.leg.passengerData.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)', paddingBottom: i === viewingDetails.leg.passengerData.length - 1 ? '0' : '4px' }}>
-                                                                            <span>{i + 1}. {p.name || '---'}</span>
-                                                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{p.document || '---'}</span>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            ) : (
-                                                                <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                                    {viewingDetails.leg.passengerList || 'Nenhum passageiro listado.'}
-                                                                </div>
-                                                            )}
-                                                        </>
+                                                        <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                            {viewingDetails.leg.passengerList || 'Nenhum passageiro listado.'}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Comissaria Section */}
                                             <div style={{ background: 'rgba(34, 197, 94, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.05)' }}>
-                                                <div style={{
-                                                    color: 'var(--primary)',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '1rem',
-                                                    letterSpacing: '0.5px',
-                                                    marginBottom: '8px',
-                                                    borderLeft: '3px solid var(--primary)',
-                                                    paddingLeft: '10px'
-                                                }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px', borderLeft: '3px solid var(--primary)', paddingLeft: '10px' }}>
                                                     COMISSARIA:
                                                 </div>
-                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '0.85rem' }}>
                                                     {isEditing ? (
-                                                        <div style={{ position: 'relative' }}>
-                                                            <Coffee size={18} style={{ position: 'absolute', left: '12px', top: '16px', color: 'var(--text-muted)' }} />
-                                                            <textarea
-                                                                className="input-field"
-                                                                rows="3"
-                                                                value={editingRequest?.legs[viewingDetails.idx]?.catering || ''}
-                                                                onChange={(e) => handleLegUpdate(viewingDetails.idx, 'catering', e.target.value)}
-                                                                placeholder="Descreva o catering desejado..."
-                                                                style={{ paddingLeft: '40px' }}
-                                                            />
-                                                        </div>
+                                                        <textarea
+                                                            className="input-field"
+                                                            rows="3"
+                                                            value={editingRequest?.legs[viewingDetails.idx]?.catering || ''}
+                                                            onChange={(e) => handleLegUpdate(viewingDetails.idx, 'catering', e.target.value)}
+                                                            placeholder="Descreva o catering desejado..."
+                                                            style={{ fontSize: '0.85rem' }}
+                                                        />
                                                     ) : (
-                                                        <>
-                                                            {viewingDetails.leg.isStandardCatering ? (
-                                                                <div style={{ textAlign: 'center', padding: '8px' }}>
-                                                                    <p style={{ color: 'var(--primary)', fontWeight: 'bold', margin: 0, letterSpacing: '2px' }}>PADRAO</p>
-                                                                </div>
-                                                            ) : (
-                                                                <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                                    {viewingDetails.leg.catering || 'Catering padrão solicitado.'}
-                                                                </div>
-                                                            )}
-                                                        </>
+                                                        <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                            {viewingDetails.leg.catering || 'Catering padrão solicitado.'}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* FBO Section */}
                                             <div style={{ background: 'rgba(34, 197, 94, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.05)' }}>
-                                                <p style={{
-                                                    color: 'var(--primary)',
-                                                    fontWeight: 'bold',
-                                                    fontSize: '1rem',
-                                                    letterSpacing: '0.5px',
-                                                    marginBottom: '8px',
-                                                    borderLeft: '3px solid var(--primary)',
-                                                    paddingLeft: '10px'
-                                                }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px', borderLeft: '3px solid var(--primary)', paddingLeft: '10px' }}>
                                                     FBO {viewingDetails.leg.fboCity || ''}:
-                                                </p>
-                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '12px', border: '1px solid var(--glass-border)', whiteSpace: 'pre-wrap' }}>
+                                                </div>
+                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '12px', border: '1px solid var(--glass-border)', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
                                                     {viewingDetails.leg.fboDetails || 'Informações não cadastradas.'}
                                                 </div>
-                                                <p style={{ margin: 0, fontStyle: 'italic', fontSize: '0.9rem', marginTop: '8px' }}>{viewingDetails.leg.fboSign || ''}</p>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div style={{
-                                            whiteSpace: 'pre-wrap',
-                                            wordBreak: 'break-word',
-                                            fontSize: '1.1rem',
-                                            lineHeight: '1.6',
-                                            color: '#fff',
-                                            fontFamily: 'var(--font-main)'
-                                        }}>
+                                        <div style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem', color: '#fff' }}>
                                             {viewingDetails.type === 'pax'
                                                 ? (viewingDetails.leg.passengerList || 'Nenhum passageiro listado.')
                                                 : (viewingDetails.leg.catering || 'Catering padrão solicitado.')}
                                         </div>
                                     )}
                                 </div>
-                                <div style={{ marginTop: '32px' }}>
+                                <div style={{ marginTop: '24px' }}>
                                     <button
                                         className="premium-button"
-                                        style={{ width: '100%', justifyContent: 'center', background: 'transparent', border: '1px solid var(--primary)', color: 'var(--primary)' }}
+                                        style={{ width: '100%', height: '44px', justifyContent: 'center', background: 'transparent', border: '1px solid var(--primary)', color: 'var(--primary)', fontSize: '0.9rem' }}
                                         onClick={() => setViewingDetails(null)}
                                     >
                                         Fechar Detalhes
@@ -737,7 +604,11 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                                         <Plane size={24} color="var(--primary)" />
                                     </div>
                                     <div>
-                                        <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{req.legs?.[0]?.origin} → {req.legs?.[0]?.destination}</h4>
+                                        <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            <span><span style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.75rem' }}>ORIGEM:</span> {req.legs?.[0]?.origin}</span>
+                                            <span style={{ color: 'var(--text-muted)' }}>|</span>
+                                            <span><span style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.75rem' }}>DESTINO:</span> {req.legs?.[0]?.destination}</span>
+                                        </h4>
                                         <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                                             {req.aircraft?.name} • {formatDateTime(req.legs?.[0]?.date, req.legs?.[0]?.time)}
                                         </p>
