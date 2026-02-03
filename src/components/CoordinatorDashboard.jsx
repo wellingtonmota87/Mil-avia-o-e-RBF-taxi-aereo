@@ -838,19 +838,19 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                         <div>
                                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Data e Hora</p>
                                             <p style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: (isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) ? '4px 8px' : '0', background: (isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                                <Calendar size={16} color="var(--primary)" /> {leg.date} às {leg.time} {(isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) && <span style={{ fontSize: '0.6rem', color: '#fbbf24' }}>(EDITADO)</span>}
+                                                <Calendar size={16} color="var(--primary)" /> {leg.date} às {leg.time} {(isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) && <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold' }}>(EDITADO)</span>}
                                             </p>
                                         </div>
                                         <div>
                                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Passageiros</p>
                                             <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', padding: (isModified('passengers', leg.passengers, idx) || isModified('passengerList', leg.passengerList, idx)) ? '4px 8px' : '0', background: (isModified('passengers', leg.passengers, idx) || isModified('passengerList', leg.passengerList, idx)) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                                <Users size={16} color="var(--primary)" /> {leg.passengers} PAX {(isModified('passengers', leg.passengers, idx) || isModified('passengerList', leg.passengerList, idx)) && <span style={{ fontSize: '0.6rem', color: '#fbbf24' }}>(EDITADO)</span>}
+                                                <Users size={16} color="var(--primary)" /> {leg.passengers} PAX {(isModified('passengers', leg.passengers, idx) || isModified('passengerList', leg.passengerList, idx)) && <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold' }}>(EDITADO)</span>}
                                             </p>
                                         </div>
                                         <div>
                                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Catering</p>
                                             <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', padding: isModified('catering', leg.catering, idx) ? '4px 8px' : '0', background: isModified('catering', leg.catering, idx) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                                <Coffee size={16} color="var(--primary)" /> {leg.catering || 'Padrão'} {isModified('catering', leg.catering, idx) && <span style={{ fontSize: '0.6rem', color: '#fbbf24' }}>(EDITADO)</span>}
+                                                <Coffee size={16} color="var(--primary)" /> {leg.catering || 'Padrão'} {isModified('catering', leg.catering, idx) && <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold' }}>(EDITADO)</span>}
                                             </p>
                                         </div>
                                     </div>
