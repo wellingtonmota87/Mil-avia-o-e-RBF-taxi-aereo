@@ -598,27 +598,115 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                     {clientRequests.map(req => {
                         const statusInfo = getStatusInfo(req.status, req);
                         return (
-                            <motion.div key={req.id} whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.02)' }} onClick={() => setSelectedRequest(req)} className="glass-morphism" style={{ padding: '24px 32px', borderRadius: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: `4px solid ${statusInfo.color}` }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                                    <div style={{ background: 'var(--primary-light)', padding: '12px', borderRadius: '12px' }}>
-                                        <Plane size={24} color="var(--primary)" />
+                            <motion.div
+                                key={req.id}
+                                whileHover={{ scale: 1.01, x: 5 }}
+                                onClick={() => setSelectedRequest(req)}
+                                className="glass-morphism"
+                                style={{
+                                    padding: '24px 32px',
+                                    borderRadius: '24px',
+                                    cursor: 'pointer',
+                                    borderLeft: `6px solid ${statusInfo.color}`,
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    {/* Top Section: Aircraft Info and Status */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px', flexWrap: 'wrap' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            <div style={{
+                                                background: 'rgba(255,255,255,0.03)',
+                                                padding: '12px 16px',
+                                                borderRadius: '12px',
+                                                border: '1px solid var(--glass-border)',
+                                                display: 'inline-block'
+                                            }}>
+                                                <div style={{ fontSize: '1.1rem', color: 'var(--primary)', letterSpacing: '0.5px', textTransform: 'uppercase', lineHeight: '1' }}>
+                                                    {req.aircraft?.name}
+                                                </div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.7 }}>
+                                                    {req.aircraft?.name?.includes('PT-RBZ') ? 'RBF TÁXI AÉREO' : 'MIL AVIAÇÃO'}
+                                                </div>
+                                            </div>
+
+                                            <div style={{
+                                                fontSize: '1.1rem',
+                                                color: '#fff',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px',
+                                                opacity: 0.9,
+                                                borderLeft: '2px solid var(--primary)',
+                                                paddingLeft: '16px'
+                                            }}>
+                                                {req.name}
+                                            </div>
+                                        </div>
+
+                                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                            <div style={{
+                                                padding: '8px 20px',
+                                                borderRadius: '24px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: '700',
+                                                background: `${statusInfo.color}15`,
+                                                color: statusInfo.color,
+                                                border: `2px solid ${statusInfo.color}`,
+                                                whiteSpace: 'nowrap',
+                                                letterSpacing: '1px'
+                                            }}>
+                                                {statusInfo.label.toUpperCase()}
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.8, fontWeight: 'bold' }}>
+                                                {req.timestamp}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 style={{ margin: 0, fontSize: '0.95rem', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            <span><span style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.75rem' }}>ORIGEM:</span> {req.legs?.[0]?.origin}</span>
-                                            <span style={{ color: 'var(--text-muted)' }}>|</span>
-                                            <span><span style={{ color: 'var(--text-muted)', fontWeight: 'bold', fontSize: '0.75rem' }}>DESTINO:</span> {req.legs?.[0]?.destination}</span>
-                                        </h4>
-                                        <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                            {req.aircraft?.name} • {formatDateTime(req.legs?.[0]?.date, req.legs?.[0]?.time)}
-                                        </p>
+
+                                    {/* Stages List */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+                                        {req.legs?.map((leg, idx) => {
+                                            const getAirportLabel = (icao) => {
+                                                const ap = brazilianAirports.find(a => a.icao === icao || a.iata === icao);
+                                                return ap ? ap.label : icao;
+                                            };
+
+                                            return (
+                                                <div key={idx} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    color: '#fff',
+                                                    fontSize: '0.8rem',
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    padding: '8px 20px',
+                                                    borderRadius: '8px',
+                                                    gap: '12px',
+                                                    justifyContent: 'space-between'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
+                                                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', width: '90px', flexShrink: 0 }}>{idx + 1}ª ETAPA</span>
+
+                                                        <div style={{ display: 'flex', alignItems: 'center', minWidth: '200px' }}>
+                                                            <span style={{ color: 'var(--text-muted)', marginRight: '8px', fontWeight: 'bold' }}>ORIGEM:</span>
+                                                            <span style={{ color: '#fff' }}>{getAirportLabel(leg.origin)}</span>
+                                                        </div>
+
+                                                        <div style={{ display: 'flex', alignItems: 'center', minWidth: '200px' }}>
+                                                            <span style={{ color: 'var(--text-muted)', marginRight: '8px', fontWeight: 'bold' }}>DESTINO:</span>
+                                                            <span style={{ color: '#fff' }}>{getAirportLabel(leg.destination)}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{ color: '#fff', fontWeight: 'bold', flexShrink: 0 }}>
+                                                        {formatDateTime(leg.date, leg.time)}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-                                    <div style={{ padding: '6px 16px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold', background: `${statusInfo.color}15`, color: statusInfo.color, border: `1px solid ${statusInfo.color}`, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        {statusInfo.icon} {statusInfo.label.toUpperCase()}
-                                    </div>
-                                    <ChevronRight size={20} color="var(--text-muted)" />
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', opacity: 0.5 }}>
+                                    <ChevronRight size={16} color="var(--text-muted)" />
                                 </div>
                             </motion.div>
                         );
