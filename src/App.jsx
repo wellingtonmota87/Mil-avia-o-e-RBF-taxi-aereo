@@ -185,7 +185,24 @@ function App() {
     setRequests(prev => {
       return prev.map(req => {
         if (req.id === requestId) {
-          const base = editedData || req;
+          // Lógica para preservar o histórico quando o cliente solicita alteração
+          let base = editedData || req;
+
+          if (editedData && newStatus === 'alteracao_solicitada') {
+            // Se estamos recebendo uma edição do cliente, salvamos o estado anterior (original) como oldData
+            // para que o coordenador possa ver o "diff" (destaque do que mudou)
+            base = {
+              ...editedData,
+              oldData: req.oldData ? req.oldData : req // Mantém o oldData original se já existir, senão usa o atual
+            };
+
+            // Caso especial: se o request estava "aprovado" ou "pendente", ele é a versão estável.
+            // Então garantimos que o oldData seja EXATAMENTE ele.
+            if (req.status === 'aprovado' || req.status === 'pendente') {
+              base.oldData = req;
+            }
+          }
+
           const finalObservation = observation !== null ? observation : (base.observation || req.observation);
           return {
             ...base,
