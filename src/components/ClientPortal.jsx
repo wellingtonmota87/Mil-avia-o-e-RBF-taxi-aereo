@@ -691,10 +691,10 @@ export default function ClientPortal({ requests, currentUser, onLogin, onLogout,
                     </button>
                     <div style={{ display: 'flex', gap: '16px', flex: '1 1 auto', minWidth: '280px' }}>
                         <button onClick={onBack} className="premium-button" style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.2)', flex: 1, justifyContent: 'center', textTransform: 'none', minWidth: 0, padding: '14px 12px' }}>
-                            <ArrowLeft size={18} /> Voltar
+                            <ArrowLeft size={18} /> Voltar Pagina
                         </button>
                         <button onClick={() => setShowLogoutConfirmation(true)} className="premium-button" style={{ background: 'rgba(248, 113, 113, 0.1)', color: '#f87171', border: '1px solid rgba(248, 113, 113, 0.2)', flex: 1, justifyContent: 'center', textTransform: 'none', minWidth: 0, padding: '14px 12px' }}>
-                            <LogOut size={18} /> Sair
+                            <LogOut size={18} /> Sair da Conta
                         </button>
                     </div>
                 </div>
