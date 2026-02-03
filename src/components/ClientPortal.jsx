@@ -686,12 +686,12 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1 }}>
                                                         <span style={{ color: 'var(--primary)', fontWeight: 'bold', width: '90px', flexShrink: 0 }}>{idx + 1}ª ETAPA</span>
 
-                                                        <div style={{ display: 'flex', alignItems: 'center', minWidth: '200px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', width: '350px', flexShrink: 0 }}>
                                                             <span style={{ color: 'var(--text-muted)', marginRight: '8px', fontWeight: 'bold' }}>ORIGEM:</span>
                                                             <span style={{ color: '#fff' }}>{getAirportLabel(leg.origin)}</span>
                                                         </div>
 
-                                                        <div style={{ display: 'flex', alignItems: 'center', minWidth: '200px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', width: '350px', flexShrink: 0 }}>
                                                             <span style={{ color: 'var(--text-muted)', marginRight: '8px', fontWeight: 'bold' }}>DESTINO:</span>
                                                             <span style={{ color: '#fff' }}>{getAirportLabel(leg.destination)}</span>
                                                         </div>
