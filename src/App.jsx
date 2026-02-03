@@ -9,6 +9,7 @@ import ClientPortal from './components/ClientPortal';
 import FleetCalendar from './components/FleetCalendar';
 import SetPassword from './components/SetPassword';
 import CrewPortal from './components/CrewPortal';
+import FlightPack from './components/FlightPack';
 
 import CompanyProfile from './components/CompanyProfile';
 import { saveFlights, loadFlights, forceSaveSync, diagnoseStorage, startAutoSave } from './utils/flightPersistence';
@@ -24,6 +25,8 @@ function App() {
   });
   const [selectedCompany, setSelectedCompany] = useState(null); // 'mil' or 'rbf'
   const [selectedAircraft, setSelectedAircraft] = useState(null);
+  const [selectedRequestForPack, setSelectedRequestForPack] = useState(null);
+  const [selectedLegIndex, setSelectedLegIndex] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(() => {
     return localStorage.getItem('milavia_submitted') === 'true';
   });
@@ -421,10 +424,30 @@ function App() {
               <CoordinatorDashboard
                 requests={requests}
                 onUpdateStatus={updateRequestStatus}
+                onGeneratePack={(req, legIdx = null) => {
+                  setSelectedRequestForPack(req);
+                  setSelectedLegIndex(legIdx);
+                  setCurrentView('flight-pack');
+                }}
               />
             )}
             {currentView === 'crew' && (
               <CrewPortal requests={requests} />
+            )}
+            {currentView === 'flight-pack' && (
+              <FlightPack
+                request={selectedRequestForPack}
+                legIndex={selectedLegIndex}
+                onBack={() => setCurrentView('coordinator')}
+                onSave={(packData) => {
+                  // Salvar os dados extras no request principal para persistência
+                  updateRequestStatus(selectedRequestForPack.id, selectedRequestForPack.status, null, {
+                    ...selectedRequestForPack,
+                    ...packData
+                  });
+                  alert('Dados do Pack salvos com sucesso!');
+                }}
+              />
             )}
           </motion.div>
         </AnimatePresence>

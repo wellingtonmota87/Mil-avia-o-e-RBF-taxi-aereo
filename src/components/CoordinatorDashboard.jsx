@@ -11,7 +11,7 @@ import { Fingerprint as FingerprintIcon } from 'lucide-react';
 import { formatDate, getTimestamp, formatDateTime } from '../utils/dateUtils';
 import { brazilianAirports } from '../data/airports';
 
-export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) {
+export default function CoordinatorDashboard({ requests = [], onUpdateStatus, onGeneratePack }) {
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
     const [isPendingApproval, setIsPendingApproval] = useState(false);
@@ -592,6 +592,23 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                             </p>
                         </div>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            {selectedRequest.status === 'aprovado' && !isEditing && (
+                                <button
+                                    onClick={() => onGeneratePack(selectedRequest)}
+                                    className="premium-button"
+                                    style={{
+                                        background: 'transparent',
+                                        border: '1px solid var(--primary)',
+                                        color: 'var(--primary)',
+                                        padding: '12px 24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    <FileText size={18} /> GERAR PACK DE VOO
+                                </button>
+                            )}
                             <div style={{ padding: '12px 24px', background: 'var(--primary-light)', borderRadius: '12px', border: '1px solid var(--primary)', color: 'var(--primary)', fontWeight: 'bold' }}>
                                 {isEditing ? editedRequest.aircraft?.name : selectedRequest.aircraft?.name}
                             </div>
@@ -1144,10 +1161,27 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                     }}>
                                         {viewingDetails.type === 'full' ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', fontFamily: 'monospace' }}>
-                                                {/* 1ª ETAPA Header */}
                                                 <div style={{ background: 'rgba(255, 193, 7, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255, 193, 7, 0.05)' }}>
-                                                    <div style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                                                        {`|> ${viewingDetails.idx + 1}ª ETAPA <|`}
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                                        <div style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                                            {`|> ${viewingDetails.idx + 1}ª ETAPA <|`}
+                                                        </div>
+                                                        {selectedRequest.status === 'aprovado' && (
+                                                            <button
+                                                                onClick={() => onGeneratePack(selectedRequest, viewingDetails.idx)}
+                                                                className="premium-button"
+                                                                style={{
+                                                                    padding: '4px 12px',
+                                                                    fontSize: '0.7rem',
+                                                                    background: 'var(--primary)',
+                                                                    color: '#000',
+                                                                    fontWeight: 'bold',
+                                                                    borderRadius: '6px'
+                                                                }}
+                                                            >
+                                                                GERAR PACK
+                                                            </button>
+                                                        )}
                                                     </div>
                                                     <div style={{ color: 'var(--glass-border)', marginTop: '-8px', marginBottom: '16px' }}>---------------------</div>
 
@@ -2427,7 +2461,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            alert('Gerando Pack de Voo para: ' + req.aircraft?.name);
+                                                            onGeneratePack(req);
                                                         }}
                                                         className="premium-button"
                                                         style={{
@@ -2503,6 +2537,27 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
 
                                                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
                                                         <span style={{ color: '#fff', opacity: 0.9 }}>{fullDateTime}</span>
+                                                        {req.status === 'aprovado' && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onGeneratePack(req, idx);
+                                                                }}
+                                                                className="premium-button"
+                                                                style={{
+                                                                    padding: '2px 8px',
+                                                                    fontSize: '0.6rem',
+                                                                    background: 'transparent',
+                                                                    border: '1px solid var(--primary)',
+                                                                    color: 'var(--primary)',
+                                                                    height: '24px',
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: 'bold'
+                                                                }}
+                                                            >
+                                                                PACK
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );

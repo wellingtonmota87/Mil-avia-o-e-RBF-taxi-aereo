@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Lock, Mail, ChevronRight, Plane, Clock, CheckCircle, AlertCircle, ShieldAlert, LogOut, Plus, ArrowLeft, Calendar, MapPin, Coffee, Users, Edit, FileText, X } from 'lucide-react';
+import { User, Lock, Mail, ChevronRight, Plane, Clock, CheckCircle, AlertCircle, ShieldAlert, LogOut, Plus, ArrowLeft, Calendar, MapPin, Coffee, Users, Edit, FileText, X, Layout, FilePlus, FileArchive } from 'lucide-react';
 import FleetCalendar from './FleetCalendar';
 import { formatDateTime } from '../utils/dateUtils';
 import { brazilianAirports } from '../data/airports';
@@ -16,6 +16,8 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] });
+    const [showPackModal, setShowPackModal] = useState(false);
+    const [selectedPackRequest, setSelectedPackRequest] = useState(null);
 
     // Scroll to top on internal navigation
     React.useEffect(() => {
@@ -736,6 +738,79 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                     style={{ padding: '12px 24px', background: 'rgba(248, 113, 113, 0.2)', color: '#f87171', border: '1px solid #f87171', fontSize: '1rem' }}
                                 >
                                     Sair da Conta
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showPackModal && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1350, padding: '20px' }}>
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="glass-morphism" style={{ padding: '40px', borderRadius: '32px', maxWidth: '600px', width: '100%', position: 'relative' }}>
+                            <button
+                                onClick={() => setShowPackModal(false)}
+                                style={{ position: 'absolute', top: '24px', right: '24px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                            >
+                                <X size={24} />
+                            </button>
+
+                            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                                <div style={{ background: 'var(--primary-light)', width: '64px', height: '64px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                                    <FileArchive size={32} color="var(--primary)" />
+                                </div>
+                                <h3 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Gerar Pack de Voo</h3>
+                                <p style={{ color: 'var(--text-muted)' }}>
+                                    {selectedPackRequest?.aircraft?.name} • {selectedPackRequest?.name}
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <button
+                                    onClick={() => alert('Gerando Capa...')}
+                                    className="premium-button"
+                                    style={{ width: '100%', justifyContent: 'flex-start', padding: '20px', gap: '16px', background: 'rgba(255,255,255,0.03)' }}
+                                >
+                                    <Layout size={24} color="var(--primary)" />
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>Gerar Capa</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Capa personalizada com dados do voo</div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => alert('Gerando Detalhes...')}
+                                    className="premium-button"
+                                    style={{ width: '100%', justifyContent: 'flex-start', padding: '20px', gap: '16px', background: 'rgba(255,255,255,0.03)' }}
+                                >
+                                    <FileText size={24} color="var(--primary)" />
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>Detalhes do Voo</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Manifesto, catering e informações técnicas</div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => alert('Adicionando PDF...')}
+                                    className="premium-button"
+                                    style={{ width: '100%', justifyContent: 'flex-start', padding: '20px', gap: '16px', background: 'rgba(52, 211, 153, 0.1)', border: '1px solid rgba(52, 211, 153, 0.3)' }}
+                                >
+                                    <FilePlus size={24} color="#34d399" />
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#34d399' }}>Adicionar PDF unir a pack</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'rgba(52, 211, 153, 0.7)' }}>Anexar documentos externos ao pacote final</div>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <div style={{ marginTop: '32px', textAlign: 'center' }}>
+                                <button
+                                    className="premium-button"
+                                    onClick={() => alert('Finalizando Pack...')}
+                                    style={{ width: '100%', padding: '16px', justifyContent: 'center', background: 'var(--primary)', color: '#000' }}
+                                >
+                                    CONCLUIR E BAIXAR PACK COMPLETO
                                 </button>
                             </div>
                         </motion.div>

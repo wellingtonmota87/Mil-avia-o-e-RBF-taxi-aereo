@@ -65,3 +65,44 @@ export const formatDateTime = (date, time) => {
     if (!time) return fDate;
     return `${fDate} às ${time}`;
 };
+
+/**
+ * Soma dois horários no formato HH:MM
+ */
+export const addTimes = (time1, time2) => {
+    if (!time1) return time2 || '00:00';
+    if (!time2) return time1 || '00:00';
+
+    const [h1, m1] = time1.split(':').map(Number);
+    const [h2, m2] = time2.split(':').map(Number);
+
+    let totalM = m1 + m2;
+    let totalH = h1 + h2 + Math.floor(totalM / 60);
+    totalM %= 60;
+
+    // Para pouso, podemos passar das 24h se o voo for longo, 
+    // mas no contexto de aviação geralmente mostramos a hora do dia (mod 24)
+    totalH %= 24;
+
+    return `${String(totalH).padStart(2, '0')}:${String(totalM).padStart(2, '0')}`;
+};
+
+/**
+ * Formata data para o padrão longo: "02/Janeiro/2026"
+ */
+export const formatDateLong = (date) => {
+    if (!date) return '';
+    const d = new Date(date + 'T12:00:00'); // T12:00:00 to avoid timezone issues
+    if (isNaN(d.getTime())) return date;
+
+    const months = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+
+    return `${day}/${month}/${year}`;
+};
