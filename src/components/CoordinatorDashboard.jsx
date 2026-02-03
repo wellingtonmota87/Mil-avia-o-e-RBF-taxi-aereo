@@ -2192,7 +2192,8 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
 
                         // User requested categories: Em Analise, Pendente, Aprovado, recusado
                         const getSimplifiedStatus = () => {
-                            if (req.status === 'novo' || req.status === 'alteracao_solicitada') return 'EM ANÁLISE';
+                            if (req.status === 'alteracao_solicitada' || (req.status === 'novo' && req.oldData)) return 'ALTERAÇÃO SOLICITADA';
+                            if (req.status === 'novo') return 'EM ANÁLISE';
                             if (req.status === 'pendente') return 'PENDENTE';
                             if (req.status === 'aprovado' || req.status === 'concluido') return 'APROVADO';
                             if (req.status === 'recusado' || req.status === 'cancelado' || req.status === 'cancelamento') return 'RECUSADO';
