@@ -2265,8 +2265,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus }) 
                                                     <span>{leg.origin}</span>
                                                     <span style={{ color: 'var(--text-muted)' }}>&gt;</span>
                                                     <span>{leg.destination}</span>
-                                                    <span style={{ color: 'var(--text-muted)', margin: '0 4px' }}>-</span>
-                                                    <span style={{ color: '#fff', opacity: 0.9 }}>{formatDateTime(leg.date, leg.time)}</span>
+                                                    <span style={{ color: '#fff', opacity: 0.9, marginLeft: 'auto', textAlign: 'right' }}>{formatDateTime(leg.date, leg.time)}</span>
                                                 </div>
                                             ))}
                                         </div>
