@@ -169,7 +169,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                 </div>
             </div>
 
-            <div className="pack-content-wrapper" style={{ paddingTop: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+            <div className="pack-content-wrapper" style={{ paddingTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
 
                 {/* --- PAGE 1: COVER --- */}
                 <div className="page-print" style={{
@@ -187,7 +187,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                     {/* Orange Border Frame */}
                     <div style={{
                         position: 'absolute',
-                        top: '0', // Moldura laranja encostada no topo
+                        top: '15mm', // Creates white space above the orange frame
                         left: '10mm',
                         right: '10mm',
                         bottom: '10mm',
@@ -197,7 +197,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
 
                     <div style={{
                         position: 'absolute',
-                        top: '0', // Imagem de fundo encostada no topo
+                        top: '15mm', // Aligned with the orange frame
                         left: '10mm',
                         right: '10mm',
                         zIndex: 0,
