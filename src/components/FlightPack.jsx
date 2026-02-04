@@ -286,7 +286,8 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                     paddingTop: '0',
                                     backgroundPosition: '0 0',
                                     fontFamily: 'inherit',
-                                    color: '#000'
+                                    color: '#000',
+                                    resize: 'none'
                                 }}
                                 value={packData.remarks}
                                 onChange={(e) => handleFieldChange('remarks', e.target.value)}
@@ -485,7 +486,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                             <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: '10px' }}>Plano de voo</div>
                             <textarea
                                 className="no-border-input"
-                                style={{ width: '100%', height: '150px', fontSize: '9px', fontFamily: 'monospace' }}
+                                style={{ width: '100%', height: '150px', fontSize: '9px', fontFamily: 'monospace', resize: 'none' }}
                                 value={packData.planoVoo}
                                 onChange={(e) => handleFieldChange('planoVoo', e.target.value)}
                             />
