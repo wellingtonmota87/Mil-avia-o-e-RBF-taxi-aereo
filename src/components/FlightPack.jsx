@@ -260,34 +260,45 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                             <p>Data: <strong>{formatDateLong(firstLeg.date)}</strong></p>
                         </div>
 
-                        <div className="remarks-container" style={{ marginTop: '30px', textAlign: 'left', paddingLeft: '40px', position: 'relative', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div className="remarks-container" style={{
+                            marginTop: '20px',
+                            textAlign: 'left',
+                            paddingLeft: '40px',
+                            paddingRight: '40px',
+                            position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '210px' // Fixed height to prevent breaking layout
+                        }}>
                             <span style={{
                                 position: 'absolute',
-                                top: '5px',
+                                top: '0',
                                 left: '40px',
                                 fontWeight: 'bold',
                                 fontSize: '18px',
                                 background: '#fff',
-                                zIndex: 5,
-                                paddingRight: '5px'
+                                zIndex: 10,
+                                paddingRight: '10px',
+                                lineHeight: '30px',
+                                height: '30px'
                             }}>Remarks:</span>
                             <textarea
                                 className="no-border-input"
                                 style={{
                                     width: '100%',
                                     height: '100%',
-                                    minHeight: '112px',
                                     fontSize: '18px',
-                                    lineHeight: '28px',
-                                    background: 'repeating-linear-gradient(transparent, transparent 27px, #000 27px, #000 28px)',
+                                    lineHeight: '30px',
+                                    padding: '0',
+                                    margin: '0',
+                                    background: 'repeating-linear-gradient(transparent, transparent 29px, #000 29px, #000 30px)',
                                     backgroundAttachment: 'local',
                                     border: 'none',
-                                    textIndent: '90px',
-                                    paddingTop: '0',
-                                    backgroundPosition: '0 0',
+                                    textIndent: '95px',
                                     fontFamily: 'inherit',
                                     color: '#000',
-                                    resize: 'none'
+                                    resize: 'none',
+                                    overflow: 'hidden'
                                 }}
                                 value={packData.remarks}
                                 onChange={(e) => handleFieldChange('remarks', e.target.value)}
