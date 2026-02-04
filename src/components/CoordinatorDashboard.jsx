@@ -69,7 +69,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
     const getStoredCoordinators = () => {
         const stored = localStorage.getItem('coordinators');
         return stored ? JSON.parse(stored) : [
-            { email: 'wellingtonmota87@gmail.com', password: 'Joziele#280289', name: 'Wellington Mota', status: 'approved' }
+            { email: 'wellingtonmota87@gmail.com', password: '280289', name: 'Wellington Mota', status: 'approved' }
         ];
     };
 
