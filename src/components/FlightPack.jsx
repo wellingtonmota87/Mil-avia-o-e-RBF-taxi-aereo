@@ -187,7 +187,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                     {/* Orange Border Frame */}
                     <div style={{
                         position: 'absolute',
-                        top: '15mm', // Creates white space above the orange frame
+                        top: '5mm', // Bordas estendidas mais para cima
                         left: '10mm',
                         right: '10mm',
                         bottom: '10mm',
@@ -197,7 +197,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
 
                     <div style={{
                         position: 'absolute',
-                        top: '15mm', // Aligned with the orange frame
+                        top: '5mm', // Acompanhando a borda laranja
                         left: '10mm',
                         right: '10mm',
                         zIndex: 0,
