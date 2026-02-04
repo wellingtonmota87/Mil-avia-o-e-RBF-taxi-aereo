@@ -309,7 +309,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
 
                     <div style={{
                         position: 'absolute',
-                        bottom: '35mm', // Descido em 1cm (total 35mm)
+                        bottom: '29.5mm', // Ajustado em 0,15cm para baixo
                         left: 'calc(10mm + 3px)',
                         right: 'calc(10mm + 3px)',
                         background: '#0f172a',
