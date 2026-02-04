@@ -190,7 +190,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                         top: '5mm', // Bordas estendidas mais para cima
                         left: '10mm',
                         right: '10mm',
-                        bottom: '10mm',
+                        bottom: '30mm', // Subida da borda inferior em 2cm (total 30mm)
                         border: '3px solid #f97316',
                         pointerEvents: 'none'
                     }} />
