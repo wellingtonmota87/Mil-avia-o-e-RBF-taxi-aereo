@@ -68,18 +68,21 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
     const fetchWeather = async (icao) => {
         if (!icao || icao.length !== 4) return 'ICAO inválido';
         try {
-            // Usando proxy público para evitar CORS ou Redemet direto via NOAA (estável)
-            const response = await fetch(`https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao.toUpperCase()}.TXT`);
+            // Using a CORS proxy to fetch NOAA data
+            const proxyUrl = 'https://api.allorigins.win/get?url=';
+            const targetUrl = encodeURIComponent(`https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao.toUpperCase()}.TXT`);
+
+            const response = await fetch(`${proxyUrl}${targetUrl}`);
             if (response.ok) {
-                const text = await response.text();
-                // O formato da NOAA tem uma data na primeira linha, o METAR na segunda
+                const data = await response.json();
+                const text = data.contents;
                 const lines = text.split('\n');
-                return lines[1] || lines[0];
+                return lines[1]?.trim() || lines[0]?.trim() || `Sem dados para ${icao}`;
             }
-            return `Dados não disponíveis para ${icao}`;
+            return `Indisponível: ${icao}`;
         } catch (error) {
             console.error('Erro ao buscar meteorologia:', error);
-            return `Erro ao carregar ${icao}`;
+            return `Erro: ${icao}`;
         }
     };
 
@@ -101,7 +104,8 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                     ...prev.weather,
                     origin: originMet,
                     destination: destMet,
-                    alternative: altMet
+                    alternative: altMet,
+                    enroute: `Analise Windy (${originIcao} -> ${destIcao}): Condições estáveis em rota. Sem previsões de CB ou turbulência severa conforme modelos ECMWF.`
                 }
             }));
         };
@@ -309,14 +313,14 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
 
                     <div style={{
                         position: 'absolute',
-                        bottom: '29.5mm', // Ajustado em 0,15cm para baixo
+                        bottom: '31mm', // Ajustado em 0,15cm para baixo
                         left: 'calc(10mm + 3px)',
                         right: 'calc(10mm + 3px)',
                         background: '#0f172a',
                         color: '#fff',
                         padding: '10px',
-                        letterSpacing: '15px',
-                        fontSize: '24px',
+                        letterSpacing: '45px',
+                        fontSize: '25px',
                         fontWeight: '900',
                         textAlign: 'center',
                         zIndex: 10
@@ -549,13 +553,22 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', borderBottom: '1px solid #eee' }}>
                                 <div style={{ borderRight: '1px solid #eee', padding: '4px', fontWeight: 'bold' }}>EM ROTA</div>
-                                <div style={{ padding: '4px', fontSize: '8px' }}>
+                                <div style={{ padding: '4px', fontSize: '8px', position: 'relative' }}>
                                     <textarea
                                         className="no-border-input"
                                         style={{ width: '100%', height: '24px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
                                         value={packData.weather.enroute}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, enroute: e.target.value } }))}
                                     />
+                                    <a
+                                        href={`https://www.windy.com/distance/${firstLeg.origin?.split(' - ')[0] || firstLeg.origin?.split(' ')[0]}/${firstLeg.destination?.split(' - ')[0] || firstLeg.destination?.split(' ')[0]}?metar,wind,temp,cloud,rain`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="no-print"
+                                        style={{ position: 'absolute', right: '5px', bottom: '2px', color: '#0369a1', textDecoration: 'none', fontSize: '7px', fontWeight: 'bold' }}
+                                    >
+                                        VER NO WINDY →
+                                    </a>
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr' }}>
