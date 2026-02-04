@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Printer, Save, Check, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Printer, Save, Check, X, RotateCcw, Plus, Paperclip, FileText, Trash2 } from 'lucide-react';
 import logoMil from '../assets/logo-mil-real.png';
 import aircraftCover from '../assets/aircraft_cover.png';
 import { formatDateLong, addTimes } from '../utils/dateUtils';
+import { decodeMetar, decodeTaf, brtToUtc } from '../utils/weatherUtils';
 
 export default function FlightPack({ request, legIndex, onBack, onSave }) {
+    const fileInputRef = useRef(null);
     // Shared data calculation (moved up to avoid ReferenceError)
     const currentLegs = request ? ((legIndex !== null && legIndex !== undefined)
         ? [request.legs?.[legIndex]].filter(Boolean)
@@ -60,76 +62,131 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                 alternative: 'Buscando...',
                 enroute: 'Em rota, prognósticos indicam ausência de fenômenos meteorológicos significativos.'
             },
+            attachments: [],
             mapSearch: lastLeg.destination?.split(' - ')[0] || lastLeg.destination?.split(' ')[0] || '',
             mapZoom: 16
         };
     });
 
-    const fetchWeather = async (icao) => {
+    const handleFileUpload = (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const url = URL.createObjectURL(file);
+            setPackData(prev => ({
+                ...prev,
+                attachments: [...(prev.attachments || []), {
+                    url,
+                    type: file.type,
+                    name: file.name,
+                    id: Date.now() + Math.random()
+                }]
+            }));
+        });
+    };
+
+    const removeAttachment = (id) => {
+        setPackData(prev => ({
+            ...prev,
+            attachments: prev.attachments.filter(a => a.id !== id)
+        }));
+    };
+
+    const fetchWeather = async (icao, date, time) => {
         if (!icao || icao.length !== 4) return 'ICAO inválido';
+        const icaoUpper = icao.toUpperCase();
         try {
             const proxyUrl = 'https://api.allorigins.win/get?url=';
+            const redemetUrl = encodeURIComponent(`https://www.redemet.aer.mil.br/api/consulta_automatica/index.php?local=${icaoUpper}&msg=metar,taf`);
 
-            // Buscar METAR e TAF simultaneamente
-            const metarUrl = encodeURIComponent(`https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao.toUpperCase()}.TXT`);
-            const tafUrl = encodeURIComponent(`https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao.toUpperCase()}.TXT`);
+            const response = await fetch(`${proxyUrl}${redemetUrl}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-            const [metarRes, tafRes] = await Promise.all([
-                fetch(`${proxyUrl}${metarUrl}`),
-                fetch(`${proxyUrl}${tafUrl}`)
-            ]);
+            const data = await response.json();
+            const contents = data?.contents;
 
-            let metar = '';
-            let taf = '';
-
-            if (metarRes.ok) {
-                const data = await metarRes.json();
-                const lines = data.contents.split('\n');
-                metar = lines[1]?.trim() || lines[0]?.trim() || '';
+            if (!contents || contents.includes('inexistente') || contents.length < 20) {
+                return `Dados não encontrados para ${icaoUpper} na REDEMET.`;
             }
 
-            if (tafRes.ok) {
-                const data = await tafRes.json();
-                const lines = data.contents.split('\n');
-                taf = lines.slice(1).join(' ').replace(/\s+/g, ' ').trim() || lines[0]?.trim() || '';
+            const lines = contents.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+
+            let metarLine = lines.slice().reverse().find(l =>
+                l.includes(icaoUpper) &&
+                (l.includes('METAR') || l.includes('SPECI')) &&
+                !l.includes('TAF')
+            );
+
+            if (!metarLine) {
+                metarLine = lines.slice().reverse().find(l => l.includes(icaoUpper) && !l.includes('TAF'));
             }
 
-            if (!metar && !taf) return `Dados indisponíveis para ${icao}`;
-            return `METAR: ${metar}${taf ? `\n\nTAF: ${taf}` : ''}`;
+            let tafLine = lines.slice().reverse().find(l => l.includes(icaoUpper) && l.includes('TAF'));
+
+            const cleanMsg = (line) => {
+                if (!line) return "";
+                const index = line.indexOf(icaoUpper);
+                return index !== -1 ? line.substring(index) : line;
+            };
+
+            const rawMetar = cleanMsg(metarLine);
+            const rawTaf = cleanMsg(tafLine);
+
+            const decodedMetar = rawMetar ? decodeMetar(rawMetar) : "METAR não disponível";
+            const decodedTaf = rawTaf ? decodeTaf(rawTaf) : "TAF não disponível";
+
+            const utc = brtToUtc(date, time);
+            const timeInfo = utc ? `\n(Ref: ${date} ${time} BRT / ${utc.hour}:${utc.min}Z)` : "";
+
+            return `METAR: ${decodedMetar}\n${decodedTaf}${timeInfo}`;
         } catch (error) {
-            console.error('Erro ao buscar meteorologia:', error);
-            return `Erro ao carregar ${icao}`;
+            console.error(`Erro ao buscar ${icaoUpper}:`, error);
+            return `Erro ao carregar ${icaoUpper} do site REDEMET.`;
         }
     };
 
     useEffect(() => {
+        let isMounted = true;
         const loadAllWeather = async () => {
             const originIcao = firstLeg.origin?.split(' - ')[0] || firstLeg.origin?.split(' ')[0];
-            const destIcao = firstLeg.destination?.split(' - ')[0] || firstLeg.destination?.split(' ')[0];
+            const destIcao = lastLeg.destination?.split(' - ')[0] || lastLeg.destination?.split(' ')[0];
             const altIcao = packData.alterna?.split(' - ')[0];
 
-            const [originMet, destMet, altMet] = await Promise.all([
-                fetchWeather(originIcao),
-                fetchWeather(destIcao),
-                fetchWeather(altIcao)
-            ]);
+            if (!originIcao) return;
 
-            setPackData(prev => ({
-                ...prev,
-                weather: {
-                    ...prev.weather,
-                    origin: originMet,
-                    destination: destMet,
-                    alternative: altMet,
-                    enroute: `Analise Windy (${originIcao} -> ${destIcao}): Condições estáveis em rota. Sem previsões de CB ou turbulência severa conforme modelos ECMWF.`
-                }
-            }));
+            const depTime = firstLeg.time || '12:00';
+            const durationArr = packData.briefing[legIndex || 0]?.tempoVoo || '01:00';
+            const arrTime = addTimes(depTime, durationArr);
+
+            const results = {};
+            const itemsToFetch = [
+                { key: 'origin', icao: originIcao, date: firstLeg.date, time: depTime },
+                { key: 'destination', icao: destIcao, date: lastLeg.date || firstLeg.date, time: arrTime },
+                { key: 'alternative', icao: altIcao, date: lastLeg.date || firstLeg.date, time: arrTime }
+            ];
+
+            for (const item of itemsToFetch) {
+                if (!item.icao || item.icao.length !== 4) continue;
+                results[item.key] = await fetchWeather(item.icao, item.date, item.time);
+                await new Promise(r => setTimeout(r, 400)); // Delay para evitar travamento do proxy
+            }
+
+            if (isMounted) {
+                setPackData(prev => ({
+                    ...prev,
+                    weather: {
+                        ...prev.weather,
+                        origin: results.origin || prev.weather.origin,
+                        destination: results.destination || prev.weather.destination,
+                        alternative: results.alternative || prev.weather.alternative,
+                        enroute: `Analise Windy (${originIcao} -> ${destIcao}): Condições estáveis em rota para o FL${prev.remarks?.match(/F(\d{3})/)?.[1] || '390'}. Sem previsões de CB ou turbulência severa conforme modelos ECMWF/Windy.`
+                    }
+                }));
+            }
         };
 
-        if (firstLeg.origin) {
-            loadAllWeather();
-        }
-    }, [firstLeg.origin, firstLeg.destination, packData.alterna]);
+        loadAllWeather();
+        return () => { isMounted = false; };
+    }, [firstLeg.origin, firstLeg.destination, packData.alterna, legIndex]);
 
     const handleFieldChange = (field, value) => {
         setPackData(prev => ({ ...prev, [field]: value }));
@@ -345,6 +402,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                     </div>
                 </div>
 
+
                 {/* --- PAGE 2: GENERAL INFO --- */}
                 <div className="page-print" style={{
                     width: '210mm',
@@ -394,18 +452,18 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                         <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '9px' }}>
                             <thead>
                                 <tr style={{ background: '#e5e7eb' }}>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>De</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Para</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Decolagem (Z)</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Tempo de Voo</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Pouso</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Distância</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Alternativa</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Balizamento?</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Solicitado?</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Rádio/TWR?</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Solicitado?</th>
-                                    <th style={{ border: '1px solid #000', padding: '4px', whiteSpace: 'nowrap' }}>Abastecimento?</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>De</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Para</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Decolagem (Z)</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Tempo de Voo</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Pouso</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Distância</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Alternativa</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Balizamento?</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Solicitado?</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Rádio/TWR?</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Solicitado?</th>
+                                    <th style={{ border: '1px solid #000', padding: '2px 4px', whiteSpace: 'nowrap' }}>Abastecimento?</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -546,33 +604,33 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                         <div style={{ background: '#f3f4f6', borderBottom: '1px solid #000', textAlign: 'center', fontWeight: 'bold', padding: '4px' }}>Análise Meteorológica (AISWEB/REDEMET)</div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', borderBottom: '1px solid #eee' }}>
-                                <div style={{ borderRight: '1px solid #eee', padding: '4px', fontWeight: 'bold' }}>ORIGEM</div>
-                                <div style={{ padding: '4px', fontSize: '8px', fontFamily: 'monospace' }}>
+                                <div style={{ borderRight: '1px solid #eee', padding: '2px 4px', fontWeight: 'bold' }}>ORIGEM</div>
+                                <div style={{ padding: '0 4px', fontSize: '8px', fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8.5px', background: 'transparent', resize: 'none', padding: '1px 0', lineHeight: '1.1' }}
                                         value={packData.weather.origin}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, origin: e.target.value } }))}
                                     />
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', borderBottom: '1px solid #eee' }}>
-                                <div style={{ borderRight: '1px solid #eee', padding: '4px', fontWeight: 'bold' }}>DESTINO</div>
-                                <div style={{ padding: '4px', fontSize: '8px', fontFamily: 'monospace' }}>
+                                <div style={{ borderRight: '1px solid #eee', padding: '2px 4px', fontWeight: 'bold' }}>DESTINO</div>
+                                <div style={{ padding: '0 4px', fontSize: '8px', fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8.5px', background: 'transparent', resize: 'none', padding: '1px 0', lineHeight: '1.1' }}
                                         value={packData.weather.destination}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, destination: e.target.value } }))}
                                     />
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', borderBottom: '1px solid #eee' }}>
-                                <div style={{ borderRight: '1px solid #eee', padding: '4px', fontWeight: 'bold' }}>EM ROTA</div>
-                                <div style={{ padding: '4px', fontSize: '8px', position: 'relative' }}>
+                                <div style={{ borderRight: '1px solid #eee', padding: '2px 4px', fontWeight: 'bold' }}>EM ROTA</div>
+                                <div style={{ padding: '0 4px', fontSize: '8px', position: 'relative', display: 'flex', alignItems: 'center' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '35px', fontSize: '8.5px', background: 'transparent', resize: 'none', padding: '1px 0', lineHeight: '1.1' }}
                                         value={packData.weather.enroute}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, enroute: e.target.value } }))}
                                     />
@@ -588,11 +646,11 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr' }}>
-                                <div style={{ borderRight: '1px solid #eee', padding: '4px', fontWeight: 'bold' }}>ALTERNATIVA</div>
-                                <div style={{ padding: '4px', fontSize: '8px', fontFamily: 'monospace' }}>
+                                <div style={{ borderRight: '1px solid #eee', padding: '2px 4px', fontWeight: 'bold' }}>ALTERNATIVA</div>
+                                <div style={{ padding: '0 4px', fontSize: '8px', fontFamily: 'monospace', display: 'flex', alignItems: 'center' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8.5px', background: 'transparent', resize: 'none', padding: '1px 0', lineHeight: '1.1' }}
                                         value={packData.weather.alternative}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, alternative: e.target.value } }))}
                                     />
@@ -642,62 +700,130 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                         </div>
                     </div>
 
+                    {/* --- ATTACHMENT ACTION BUTTON (ULTRA COMPACT) --- */}
+                    <div className="no-print" style={{
+                        marginTop: '10px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '5px',
+                        padding: '8px',
+                        border: '1px dashed #c9a86a',
+                        borderRadius: '10px',
+                        background: '#fff9f0',
+                        width: 'fit-content',
+                        margin: '10px auto'
+                    }}>
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            style={{
+                                background: '#c9a86a', color: '#000', padding: '5px 12px', borderRadius: '6px',
+                                fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', border: 'none',
+                                display: 'flex', alignItems: 'center', gap: '6px'
+                            }}
+                        >
+                            <Plus size={14} /> ADICIONAR ANEXO (PDF/IMG)
+                        </button>
+                        <input type="file" ref={fileInputRef} multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
+                        {packData.attachments?.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'center' }}>
+                                {packData.attachments.map(att => (
+                                    <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '3px', background: '#fff', border: '1px solid #ddd', padding: '1px 5px', borderRadius: '3px', fontSize: '8.5px' }}>
+                                        <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</span>
+                                        <button onClick={() => removeAttachment(att.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 2px' }}><X size={9} /></button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+                {/* --- EXTRA PAGES (ATTACHMENTS) - RENDERED AT THE VERY END --- */}
+                {(packData.attachments || []).map((att, idx) => (
+                    <div key={att.id} className="page-print" style={{
+                        width: '210mm',
+                        height: '297mm',
+                        background: '#fff',
+                        padding: '10mm',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        border: 'none',
+                        position: 'relative',
+                        boxSizing: 'border-box',
+                        overflow: 'hidden',
+                        margin: '20px auto'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+                            <span style={{ fontSize: '10px', color: '#666', fontWeight: 'bold' }}>ANEXO ADICIONAL: {att.name.toUpperCase()}</span>
+                            <div className="no-print" style={{ color: '#94a3b8', fontSize: '10px' }}>Página de Anexo</div>
+                        </div>
+                        <div style={{ flex: 1, width: '100%', height: 'calc(100% - 30px)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+                            {att.type.startsWith('image/') ? (
+                                <img src={att.url} alt={att.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                            ) : (
+                                <iframe
+                                    src={`${att.url}#toolbar=0&navpanes=0&scrollbar=0`}
+                                    title={att.name}
+                                    style={{ width: '100%', height: '100%', border: 'none' }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                ))}
 
-            <style>{`
-                .no-border-input {
-                    border: 1px dashed transparent;
-                    background: transparent;
-                    outline: none;
-                    font-family: inherit;
-                    color: inherit;
-                    padding: 4px;
-                    transition: border-color 0.2s;
-                }
-                .no-border-input:hover {
-                    border-color: #ccc;
-                }
-                .no-border-input:focus {
-                    border-color: var(--primary);
-                    background: #fff8e1;
-                }
-                @media print {
-                    .no-print, .nav-bar, footer, nav { display: none !important; }
-                    body { background: #fff !important; margin: 0; padding: 0; }
-                    .flight-pack-container { background: #fff !important; padding: 0 !important; }
-                    .pack-content-wrapper { padding-top: 0 !important; }
-                    .page-print { 
-                        margin: 0 !important; 
-                        padding: 5mm 20mm 15mm 20mm !important;
-                        box-shadow: none !important; 
-                        border: none !important;
-                        page-break-after: always;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                        box-sizing: border-box !important;
-                        height: 297mm !important;
-                        overflow: hidden !important;
-                        position: relative !important;
-                        display: flex !important;
-                        flex-direction: column !important;
+                <style>{`
+                    .no-border-input {
+                        border: 1px dashed transparent;
+                        background: transparent;
+                        outline: none;
+                        font-family: inherit;
+                        color: inherit;
+                        padding: 4px;
+                        transition: border-color 0.2s;
                     }
-                    .remarks-container {
-                        flex: 1 !important;
+                    .no-border-input:hover {
+                        border-color: #ccc;
                     }
-                    .remarks-container textarea {
-                        height: 100% !important;
+                    .no-border-input:focus {
+                        border-color: var(--primary);
+                        background: #fff8e1;
                     }
-                    .logo-container-print { margin-top: 0 !important; }
-                    .logo-img-print { margin-bottom: -15px !important; }
-                    .title-pkg-print { margin-top: -25px !important; }
-                    .info-block-print { margin-top: 20px !important; }
-                }
-                @page {
-                    size: A4;
-                    margin: 0;
-                }
-            `}</style>
+                    @media print {
+                        .no-print, .nav-bar, footer, nav { display: none !important; }
+                        body { background: #fff !important; margin: 0; padding: 0; }
+                        .flight-pack-container { background: #fff !important; padding: 0 !important; }
+                        .pack-content-wrapper { padding-top: 0 !important; }
+                        .page-print { 
+                            margin: 0 !important; 
+                            padding: 5mm 20mm 15mm 20mm !important;
+                            box-shadow: none !important; 
+                            border: none !important;
+                            page-break-after: always;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                            box-sizing: border-box !important;
+                            height: 297mm !important;
+                            overflow: hidden !important;
+                            position: relative !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                        }
+                        .remarks-container {
+                            flex: 1 !important;
+                        }
+                        .remarks-container textarea {
+                            height: 100% !important;
+                        }
+                        .logo-container-print { margin-top: 0 !important; }
+                        .logo-img-print { margin-bottom: -15px !important; }
+                        .title-pkg-print { margin-top: -25px !important; }
+                        .info-block-print { margin-top: 20px !important; }
+                    }
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                `}</style>
+            </div>
         </div>
     );
 }
