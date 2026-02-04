@@ -68,21 +68,37 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
     const fetchWeather = async (icao) => {
         if (!icao || icao.length !== 4) return 'ICAO inválido';
         try {
-            // Using a CORS proxy to fetch NOAA data
             const proxyUrl = 'https://api.allorigins.win/get?url=';
-            const targetUrl = encodeURIComponent(`https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao.toUpperCase()}.TXT`);
 
-            const response = await fetch(`${proxyUrl}${targetUrl}`);
-            if (response.ok) {
-                const data = await response.json();
-                const text = data.contents;
-                const lines = text.split('\n');
-                return lines[1]?.trim() || lines[0]?.trim() || `Sem dados para ${icao}`;
+            // Buscar METAR e TAF simultaneamente
+            const metarUrl = encodeURIComponent(`https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao.toUpperCase()}.TXT`);
+            const tafUrl = encodeURIComponent(`https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao.toUpperCase()}.TXT`);
+
+            const [metarRes, tafRes] = await Promise.all([
+                fetch(`${proxyUrl}${metarUrl}`),
+                fetch(`${proxyUrl}${tafUrl}`)
+            ]);
+
+            let metar = '';
+            let taf = '';
+
+            if (metarRes.ok) {
+                const data = await metarRes.json();
+                const lines = data.contents.split('\n');
+                metar = lines[1]?.trim() || lines[0]?.trim() || '';
             }
-            return `Indisponível: ${icao}`;
+
+            if (tafRes.ok) {
+                const data = await tafRes.json();
+                const lines = data.contents.split('\n');
+                taf = lines.slice(1).join(' ').replace(/\s+/g, ' ').trim() || lines[0]?.trim() || '';
+            }
+
+            if (!metar && !taf) return `Dados indisponíveis para ${icao}`;
+            return `METAR: ${metar}${taf ? `\n\nTAF: ${taf}` : ''}`;
         } catch (error) {
             console.error('Erro ao buscar meteorologia:', error);
-            return `Erro: ${icao}`;
+            return `Erro ao carregar ${icao}`;
         }
     };
 
@@ -534,7 +550,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                 <div style={{ padding: '4px', fontSize: '8px', fontFamily: 'monospace' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '24px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
                                         value={packData.weather.origin}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, origin: e.target.value } }))}
                                     />
@@ -545,7 +561,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                 <div style={{ padding: '4px', fontSize: '8px', fontFamily: 'monospace' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '24px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
                                         value={packData.weather.destination}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, destination: e.target.value } }))}
                                     />
@@ -556,7 +572,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                 <div style={{ padding: '4px', fontSize: '8px', position: 'relative' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '24px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
                                         value={packData.weather.enroute}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, enroute: e.target.value } }))}
                                     />
@@ -576,7 +592,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                 <div style={{ padding: '4px', fontSize: '8px', fontFamily: 'monospace' }}>
                                     <textarea
                                         className="no-border-input"
-                                        style={{ width: '100%', height: '24px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
+                                        style={{ width: '100%', height: '45px', fontSize: '8px', background: 'transparent', resize: 'none', padding: '2px' }}
                                         value={packData.weather.alternative}
                                         onChange={(e) => setPackData(prev => ({ ...prev, weather: { ...prev.weather, alternative: e.target.value } }))}
                                     />
