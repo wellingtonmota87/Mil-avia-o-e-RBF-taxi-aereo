@@ -169,7 +169,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                 </div>
             </div>
 
-            <div className="pack-content-wrapper" style={{ paddingTop: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '40px' }}>
+            <div className="pack-content-wrapper" style={{ paddingTop: '54px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
 
                 {/* --- PAGE 1: COVER --- */}
                 <div className="page-print" style={{
