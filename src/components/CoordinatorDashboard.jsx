@@ -2457,29 +2457,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         {/* Status Section */}
                                         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                {(getSimplifiedStatus() === 'APROVADO') && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            onGeneratePack(req);
-                                                        }}
-                                                        className="premium-button"
-                                                        style={{
-                                                            padding: '4px 12px',
-                                                            fontSize: '0.65rem',
-                                                            background: 'transparent',
-                                                            border: '1px solid var(--primary)',
-                                                            color: 'var(--primary)',
-                                                            fontWeight: 'bold',
-                                                            letterSpacing: '0.5px',
-                                                            height: '28px',
-                                                            borderRadius: '6px'
-                                                        }}
-                                                    >
-                                                        <FileText size={12} style={{ marginRight: '4px' }} />
-                                                        GERAR PACK DE VOO
-                                                    </button>
-                                                )}
+
                                                 <div style={{
                                                     padding: '8px 20px',
                                                     borderRadius: '24px',
