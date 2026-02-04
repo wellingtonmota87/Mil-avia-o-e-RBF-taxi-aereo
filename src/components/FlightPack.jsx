@@ -268,7 +268,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                             position: 'relative',
                             display: 'flex',
                             flexDirection: 'column',
-                            height: '210px' // Fixed height to prevent breaking layout
+                            height: '120px' // Reduced height (about 3 lines less)
                         }}>
                             <span style={{
                                 position: 'absolute',
@@ -309,7 +309,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
 
                     <div style={{
                         position: 'absolute',
-                        bottom: 'calc(10mm + 3px)',
+                        bottom: '25mm', // Lifted footer up
                         left: 'calc(10mm + 3px)',
                         right: 'calc(10mm + 3px)',
                         background: '#0f172a',
