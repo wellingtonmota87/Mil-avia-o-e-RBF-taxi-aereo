@@ -1,10 +1,11 @@
 import React from 'react';
-import { ListChecks, Users, ArrowRight, Plane, UserCog, Fingerprint, Trash2, Clock } from 'lucide-react';
+import { ListChecks, Users, ArrowRight, Plane, UserCog, Fingerprint, Trash2, Clock, Download, Upload, Database, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import logoRbf from '../assets/logo-rbf.png';
 import logoMil from '../assets/logo-mil-real.png';
+import { exportToJSON, importFromJSON } from '../utils/flightPersistence';
 
-export default function CoordinatorHome({ requests, onNavigate }) {
+export default function CoordinatorHome({ requests, onNavigate, onRequestsImported }) {
     const pendingCount = requests.filter(r => r.status === 'novo').length;
     const uniqueClients = [...new Set(requests.map(r => r.name))].filter(Boolean);
 
@@ -338,6 +339,92 @@ export default function CoordinatorHome({ requests, onNavigate }) {
                     </div>
                 </motion.div>
             </div>
+
+            {/* Sistema de Backup e Sincronização */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                style={{
+                    marginTop: '80px',
+                    padding: '40px',
+                    borderRadius: '32px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid var(--glass-border)',
+                    textAlign: 'center'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '16px', color: 'var(--primary)' }}>
+                    <Database size={24} />
+                    <h3 style={{ margin: 0, fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Sincronização de Dados</h3>
+                </div>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px' }}>
+                    Use estas ferramentas para mover seus dados entre o ambiente de teste (Localhost) e o site oficial (GitHub), ou para criar cópias de segurança.
+                </p>
+
+                <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={() => exportToJSON(requests)}
+                        className="premium-button"
+                        style={{
+                            background: 'rgba(52, 211, 153, 0.1)',
+                            border: '1px solid #34d399',
+                            color: '#34d399',
+                            padding: '12px 24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        <Download size={20} /> Exportar Backup (.json)
+                    </button>
+
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type="file"
+                            accept=".json"
+                            onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    try {
+                                        const importedFlights = await importFromJSON(file);
+                                        if (importedFlights && importedFlights.length > 0) {
+                                            if (confirm(`Deseja importar ${importedFlights.length} voos? Isso irá ADICIONAR aos voos existentes sem apagar nada.`)) {
+                                                onRequestsImported(importedFlights);
+                                                alert('Dados importados com sucesso!');
+                                            }
+                                        }
+                                    } catch (err) {
+                                        alert('Erro ao importar: ' + err.message);
+                                    }
+                                }
+                            }}
+                            style={{
+                                position: 'absolute',
+                                width: '100%',
+                                height: '100%',
+                                opacity: 0,
+                                cursor: 'pointer',
+                                zIndex: 2
+                            }}
+                        />
+                        <button
+                            className="premium-button"
+                            style={{
+                                background: 'rgba(251, 191, 36, 0.1)',
+                                border: '1px solid #fbbf24',
+                                color: '#fbbf24',
+                                padding: '12px 24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <Upload size={20} /> Importar Dados
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 }

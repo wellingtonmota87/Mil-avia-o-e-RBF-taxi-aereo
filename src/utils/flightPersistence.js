@@ -235,3 +235,51 @@ export const stopAutoSave = () => {
         autoSaveInterval = null;
     }
 };
+
+// Exportar todos os dados para um arquivo JSON
+export const exportToJSON = (flights) => {
+    try {
+        const data = {
+            version: '1.0',
+            exportedAt: new Date().toISOString(),
+            flights: flights || []
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `milavia_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        return true;
+    } catch (error) {
+        console.error('[PERSISTÊNCIA] Erro ao exportar dados:', error);
+        return false;
+    }
+};
+
+// Importar dados de um arquivo JSON
+export const importFromJSON = async (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data && Array.isArray(data.flights)) {
+                    resolve(data.flights);
+                } else if (Array.isArray(data)) {
+                    // Suporte para formato antigo (array direto)
+                    resolve(data);
+                } else {
+                    reject(new Error('Formato de arquivo inválido'));
+                }
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsText(file);
+    });
+};
