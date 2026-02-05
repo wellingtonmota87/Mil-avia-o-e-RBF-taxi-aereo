@@ -593,7 +593,7 @@ export default function FleetCalendar({ requests = [], onBack }) {
                                         {selectedFlight.legs.map((leg, idx) => (
                                             <div
                                                 key={idx}
-                                                onClick={() => setViewingDetails(selectedFlight)}
+                                                onClick={() => setViewingDetails({ ...selectedFlight, selectedLegIndex: idx })}
                                                 style={{
                                                     background: 'rgba(255,255,255,0.02)',
                                                     border: '1px solid rgba(255,255,255,0.08)',
@@ -739,81 +739,86 @@ export default function FleetCalendar({ requests = [], onBack }) {
 
                             {/* Itinerary - High Tech Style */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                {viewingDetails.legs.map((leg, idx) => (
-                                    <div key={idx} style={{
-                                        background: 'rgba(255,255,255,0.02)',
-                                        borderRadius: '24px',
-                                        padding: '24px',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        fontFamily: 'monospace'
-                                    }}>
-                                        {/* ETAPA Header */}
-                                        <div style={{ marginBottom: '16px', fontFamily: 'monospace' }}>
-                                            <div style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '8px' }}>
-                                                {`|> ${idx + 1}ª ETAPA <|`}
+                                {viewingDetails.legs.map((leg, idx) => {
+                                    // Show only if no specific leg is selected, or if this is the selected leg
+                                    if (viewingDetails.selectedLegIndex !== undefined && viewingDetails.selectedLegIndex !== idx) return null;
+
+                                    return (
+                                        <div key={idx} style={{
+                                            background: 'rgba(255,255,255,0.02)',
+                                            borderRadius: '24px',
+                                            padding: '24px',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            fontFamily: 'monospace'
+                                        }}>
+                                            {/* ETAPA Header */}
+                                            <div style={{ marginBottom: '16px', fontFamily: 'monospace' }}>
+                                                <div style={{ color: 'var(--primary)', fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '8px' }}>
+                                                    {`|> ${idx + 1}ª ETAPA <|`}
+                                                </div>
+
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '12px', fontSize: '0.9rem' }}>
+                                                    <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Data:</span> <span style={{ color: '#fff' }}>{formatDate(leg.date)}</span></p>
+                                                    <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Origem:</span> <span style={{ color: '#fff' }}>{leg.origin}</span></p>
+                                                    <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>DESTINO:</span> <span style={{ color: '#fff' }}>{leg.destination}</span></p>
+                                                    <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Horário:</span> <span style={{ color: '#fff' }}>{leg.time}</span></p>
+                                                </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '12px', fontSize: '0.9rem' }}>
-                                                <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Data:</span> <span style={{ color: '#fff' }}>{formatDate(leg.date)}</span></p>
-                                                <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Origem:</span> <span style={{ color: '#fff' }}>{leg.origin}</span></p>
-                                                <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>DESTINO:</span> <span style={{ color: '#fff' }}>{leg.destination}</span></p>
-                                                <p style={{ margin: 0 }}><span style={{ color: 'var(--text-muted)' }}>Horário:</span> <span style={{ color: '#fff' }}>{leg.time}</span></p>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                                {/* Passageiros Section */}
+                                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Users size={14} /> PASSAGEIROS ({leg.passengers}):
+                                                    </div>
+                                                    <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.5' }}>
+                                                        {Array.isArray(leg.passengerData) && leg.passengerData.length > 0 ? (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                {leg.passengerData.map((p, i) => (
+                                                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '2px' }}>
+                                                                        <span>{p.name || '---'}</span>
+                                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{p.document || ''}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p style={{ margin: 0 }}>{leg.passengerList || 'Nenhum passageiro listado.'}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Comissaria Section */}
+                                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Coffee size={16} /> COMISSARIA:
+                                                    </div>
+                                                    <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.6' }}>
+                                                        {leg.catering ? (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                                {leg.catering.split(/[\n,]/).filter(item => item.trim() !== '').map((item, i) => (
+                                                                    <div key={i} style={{ display: 'flex', gap: '8px' }}>
+                                                                        <span style={{ color: 'var(--primary)' }}>•</span>
+                                                                        <span>{item.trim()}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p style={{ margin: 0 }}>Catering padrão solicitado.</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* FBO Section */}
+                                                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <MapPin size={16} /> FBO {leg.fboCity || ''}:
+                                                    </div>
+                                                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#fff', lineHeight: '1.6' }}>{leg.fboDetails || 'Informações operacionais não disponíveis.'}</p>
+                                                </div>
                                             </div>
                                         </div>
-
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                            {/* Passageiros Section */}
-                                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Users size={14} /> PASSAGEIROS ({leg.passengers}):
-                                                </div>
-                                                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.5' }}>
-                                                    {Array.isArray(leg.passengerData) && leg.passengerData.length > 0 ? (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            {leg.passengerData.map((p, i) => (
-                                                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '2px' }}>
-                                                                    <span>{p.name || '---'}</span>
-                                                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{p.document || ''}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p style={{ margin: 0 }}>{leg.passengerList || 'Nenhum passageiro listado.'}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Comissaria Section */}
-                                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Coffee size={16} /> COMISSARIA:
-                                                </div>
-                                                <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.6' }}>
-                                                    {leg.catering ? (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                            {leg.catering.split(/[\n,]/).filter(item => item.trim() !== '').map((item, i) => (
-                                                                <div key={i} style={{ display: 'flex', gap: '8px' }}>
-                                                                    <span style={{ color: 'var(--primary)' }}>•</span>
-                                                                    <span>{item.trim()}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p style={{ margin: 0 }}>Catering padrão solicitado.</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* FBO Section */}
-                                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <MapPin size={16} /> FBO {leg.fboCity || ''}:
-                                                </div>
-                                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#fff', lineHeight: '1.6' }}>{leg.fboDetails || 'Informações operacionais não disponíveis.'}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Tripulação do Voo Section */}

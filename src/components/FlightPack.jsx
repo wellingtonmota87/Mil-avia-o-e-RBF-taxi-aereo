@@ -6,6 +6,33 @@ import aircraftCover from '../assets/aircraft_cover.png';
 import { formatDateLong, addTimes } from '../utils/dateUtils';
 import { decodeMetar, decodeTaf, brtToUtc } from '../utils/weatherUtils';
 
+// FBO Database - Automatic lookup by airport ICAO code
+const FBO_DATABASE = {
+    'SBBH': {
+        name: 'Hangar Líder Aviação',
+        details: `Rua Boaventura, 2.312, Hangar 13, Jaraguá
+CEP 31270-020 - Belo Horizonte - MG
+Telefone: (31) 3490-4500
+WhatsApp (31) 99165-7308`
+    }
+    // Adicione mais FBOs aqui conforme necessário
+};
+
+// Function to get FBO info from airport code
+const getFboInfo = (airportString) => {
+    if (!airportString) return { name: '', details: '' };
+
+    // Extract ICAO code (first 4 characters or before ' - ')
+    const icao = airportString.split(' - ')[0]?.trim().substring(0, 4).toUpperCase();
+
+    console.log('getFboInfo - airportString:', airportString);
+    console.log('getFboInfo - extracted ICAO:', icao);
+    console.log('getFboInfo - found in database:', FBO_DATABASE[icao]);
+
+    // Return FBO info if exists, otherwise return empty
+    return FBO_DATABASE[icao] || { name: '', details: '' };
+};
+
 export default function FlightPack({ request, legIndex, onBack, onSave }) {
     const fileInputRef = useRef(null);
     // Shared data calculation (moved up to avoid ReferenceError)
@@ -24,7 +51,7 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
             alterna: request.alterna || firstLeg.destination || '',
             pilot1: request.crew?.[0]?.name || request.pilot1 || 'Roberto Thompson',
             pilot2: request.crew?.[1]?.name || request.pilot2 || 'Roberto Saltiel',
-            remarks: request.remarks || 'PANAS UZ16 OSUNO\nF390',
+            remarks: request.remarks || 'Adicione a rota\nF390',
             planoVoo: request.planoVoo || `(FPL-PRKRT-IG\n-C25A/L-SDFGHRW/S\n-${firstLeg.origin}${firstLeg.time?.replace(':', '') || '1700'}\n-N0330F390 PANAS UZ16 OSUNO\n-${firstLeg.destination}0100 ${request.alterna || firstLeg.origin}\n-PBN/A1B2C2D2O2S1 DOF/260102 EET/SBRE0017 OPR/MIL AVIACAO SA\nORGN/SBSPSIGX PER/B RMK/AD CFM IDPLANO WQWB1HZ7 FROM SDAG)`,
             briefing: request.legs?.map((leg, idx) => {
                 // Se já existe briefing salvo para este index no request, usar ele
@@ -40,8 +67,38 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                     distance: (leg.distance || '').replace(/\D/g, '')
                 };
             }) || [],
-            originFbo: firstLeg.originFbo || '',
-            destinationFbo: firstLeg.destinationFbo || '',
+            originFbo: (() => {
+                console.log('=== ORIGIN FBO INIT ===');
+                console.log('firstLeg.origin:', firstLeg.origin);
+                console.log('firstLeg.fboCity:', firstLeg.fboCity);
+                console.log('firstLeg.originFbo:', firstLeg.originFbo);
+                const fboInfo = getFboInfo(firstLeg.origin);
+                const result = (firstLeg.fboCity && firstLeg.fboCity.trim()) || (firstLeg.originFbo && firstLeg.originFbo.trim()) || fboInfo.name;
+                console.log('Final originFbo:', result);
+                return result;
+            })(),
+            originFboDetails: (() => {
+                const fboInfo = getFboInfo(firstLeg.origin);
+                const result = (firstLeg.fboDetails && firstLeg.fboDetails.trim()) || fboInfo.details;
+                console.log('Final originFboDetails:', result);
+                return result;
+            })(),
+            destinationFbo: (() => {
+                console.log('=== DESTINATION FBO INIT ===');
+                console.log('lastLeg.destination:', lastLeg.destination);
+                console.log('lastLeg.fboCity:', lastLeg.fboCity);
+                console.log('lastLeg.destinationFbo:', lastLeg.destinationFbo);
+                const fboInfo = getFboInfo(lastLeg.destination);
+                const result = (lastLeg.fboCity && lastLeg.fboCity.trim()) || (lastLeg.destinationFbo && lastLeg.destinationFbo.trim()) || fboInfo.name;
+                console.log('Final destinationFbo:', result);
+                return result;
+            })(),
+            destinationFboDetails: (() => {
+                const fboInfo = getFboInfo(lastLeg.destination);
+                const result = (lastLeg.fboDetails && lastLeg.fboDetails.trim()) || fboInfo.details;
+                console.log('Final destinationFboDetails:', result);
+                return result;
+            })(),
             fuelSupplier: (() => {
                 const prices = [
                     { name: 'Shell', val: firstLeg.fuelShell },
@@ -63,8 +120,8 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                 enroute: 'Em rota, prognósticos indicam ausência de fenômenos meteorológicos significativos.'
             },
             attachments: [],
-            mapSearch: lastLeg.destination?.split(' - ')[0] || lastLeg.destination?.split(' ')[0] || '',
-            mapZoom: 16
+            mapImage: null,
+            mapImageScale: 100
         };
     });
 
@@ -538,7 +595,12 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                     placeholder="FBO Origem"
                                 />
                             </div>
-                            <div style={{ color: '#555', fontSize: '9px', display: 'flex', alignItems: 'center' }}>
+                            {packData.originFboDetails && (
+                                <div style={{ color: '#666', fontSize: '7px', marginLeft: '10px', marginTop: '2px', whiteSpace: 'pre-line', lineHeight: '1.3' }}>
+                                    {packData.originFboDetails}
+                                </div>
+                            )}
+                            <div style={{ color: '#555', fontSize: '9px', display: 'flex', alignItems: 'center', marginTop: '5px' }}>
                                 - <input
                                     className="no-border-input"
                                     style={{ flex: 1, padding: '0 4px', fontSize: '9px' }}
@@ -547,6 +609,11 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                                     placeholder="FBO Destino"
                                 />
                             </div>
+                            {packData.destinationFboDetails && (
+                                <div style={{ color: '#666', fontSize: '7px', marginLeft: '10px', marginTop: '2px', whiteSpace: 'pre-line', lineHeight: '1.3' }}>
+                                    {packData.destinationFboDetails}
+                                </div>
+                            )}
 
                             <div style={{ fontSize: '11px', fontWeight: 'bold', borderBottom: '1px solid #ddd', margin: '10px 0 5px' }}>Abastecimento:</div>
                             <div style={{ color: '#555', fontSize: '9px', display: 'flex', alignItems: 'center' }}>
@@ -659,44 +726,94 @@ export default function FlightPack({ request, legIndex, onBack, onSave }) {
                         </div>
                     </div>
 
-                    {/* Satellite Map Section */}
+                    {/* Screenshot/Image Section */}
                     <div style={{ flex: 1, border: '1px solid #000', overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                        <div style={{ background: '#f3f4f6', borderBottom: '1px solid #000', textAlign: 'center', fontWeight: 'bold', padding: '4px', fontSize: '11px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-                            <span>Vista Satélite (Google Earth)</span>
-                            {/* Map Controls - Hidden during print */}
-                            <div className="no-print" style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: '20px' }}>
-                                <input
-                                    className="no-border-input"
-                                    style={{ width: '100px', fontSize: '10px', height: '20px', border: '1px solid #ccc', background: '#fff' }}
-                                    value={packData.mapSearch}
-                                    onChange={(e) => handleFieldChange('mapSearch', e.target.value)}
-                                    placeholder="Busca (Ex: SBSP)"
-                                />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span style={{ fontSize: '10px' }}>Zoom:</span>
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="21"
-                                        step="1"
-                                        style={{ width: '60px' }}
-                                        value={packData.mapZoom}
-                                        onChange={(e) => handleFieldChange('mapZoom', parseInt(e.target.value))}
-                                    />
-                                    <span style={{ fontSize: '10px', width: '15px' }}>{packData.mapZoom}</span>
-                                </div>
+                        <div style={{ background: '#f3f4f6', borderBottom: '1px solid #000', textAlign: 'center', fontWeight: 'bold', padding: '4px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            {/* Title - Destination Airport Name - NOW ON LEFT */}
+                            <span style={{ flex: 1, textAlign: 'left', paddingLeft: '10px' }}>{lastLeg.destination || 'Destino'}</span>
+                            {/* Upload Controls - Hidden during print - NOW ON RIGHT */}
+                            <div className="no-print" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <button
+                                    onClick={() => {
+                                        const input = document.createElement('input');
+                                        input.type = 'file';
+                                        input.accept = 'image/*';
+                                        input.onchange = (e) => {
+                                            const file = e.target.files[0];
+                                            if (file) {
+                                                const url = URL.createObjectURL(file);
+                                                handleFieldChange('mapImage', url);
+                                            }
+                                        };
+                                        input.click();
+                                    }}
+                                    style={{
+                                        background: '#c9a86a',
+                                        color: '#000',
+                                        padding: '4px 10px',
+                                        borderRadius: '4px',
+                                        fontWeight: 'bold',
+                                        fontSize: '10px',
+                                        cursor: 'pointer',
+                                        border: 'none'
+                                    }}
+                                >
+                                    Adicionar Imagem
+                                </button>
+                                {packData.mapImage && (
+                                    <>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff', padding: '4px 8px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                                            <span style={{ fontSize: '10px', fontWeight: 'normal' }}>Tamanho:</span>
+                                            <input
+                                                type="range"
+                                                min="25"
+                                                max="200"
+                                                step="5"
+                                                style={{ width: '80px' }}
+                                                value={packData.mapImageScale}
+                                                onChange={(e) => handleFieldChange('mapImageScale', parseInt(e.target.value))}
+                                            />
+                                            <span style={{ fontSize: '10px', width: '35px', fontWeight: 'normal' }}>{packData.mapImageScale}%</span>
+                                        </div>
+                                        <button
+                                            onClick={() => handleFieldChange('mapImage', null)}
+                                            style={{
+                                                background: '#ef4444',
+                                                color: '#fff',
+                                                padding: '4px 10px',
+                                                borderRadius: '4px',
+                                                fontWeight: 'bold',
+                                                fontSize: '10px',
+                                                cursor: 'pointer',
+                                                border: 'none'
+                                            }}
+                                        >
+                                            Remover
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
-                        <div style={{ flex: 1, position: 'relative', minHeight: '350px' }}>
-                            <iframe
-                                key={`${packData.mapSearch}-${packData.mapZoom}`}
-                                width="100%"
-                                height="100%"
-                                style={{ border: 0 }}
-                                loading="lazy"
-                                allowFullScreen
-                                src={`https://www.google.com/maps?q=${encodeURIComponent(packData.mapSearch)}&t=k&z=${packData.mapZoom}&output=embed`}
-                            ></iframe>
+                        <div style={{ flex: 1, position: 'relative', minHeight: '350px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f9fafb', overflow: 'auto' }}>
+                            {packData.mapImage ? (
+                                <img
+                                    src={packData.mapImage}
+                                    alt="Screenshot"
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        objectFit: 'contain',
+                                        transform: `scale(${packData.mapImageScale / 100})`,
+                                        transformOrigin: 'center',
+                                        transition: 'transform 0.2s ease'
+                                    }}
+                                />
+                            ) : (
+                                <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '12px' }}>
+                                    <p>Nenhuma imagem adicionada</p>
+                                    <p className="no-print" style={{ fontSize: '10px', marginTop: '5px' }}>Clique em "Adicionar Imagem" para fazer upload</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

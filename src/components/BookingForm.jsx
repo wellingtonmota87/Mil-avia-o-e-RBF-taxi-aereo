@@ -91,7 +91,7 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
             setActiveAutocomplete({ index, field, results });
         }
 
-        const isPampulha = ['SBBH', 'PAMPULHA'].some(key => upperValue.includes(key));
+        const isPampulha = ['SBBH', 'PAMPULHA', 'BELO HORIZONTE'].some(key => upperValue.includes(key));
 
         if (field === 'destination' && newLegs[index + 1]) {
             if (isPampulha) {
@@ -427,9 +427,9 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
                                 }}>
                                     <div style={{ fontSize: '24px', color: '#000', fontWeight: 'bold' }}>+</div>
                                 </div>
-                                <h3 style={{ 
-                                    color: 'var(--primary)', 
-                                    fontSize: '1.2rem', 
+                                <h3 style={{
+                                    color: 'var(--primary)',
+                                    fontSize: '1.2rem',
                                     margin: 0,
                                     fontWeight: '600'
                                 }}>
@@ -444,397 +444,397 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
                             paddingBottom: '32px',
                             borderBottom: index < 4 ? '1px solid var(--glass-border)' : 'none'
                         }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h3 style={{
-                                color: 'var(--primary)',
-                                fontSize: '1.25rem',
-                                margin: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px'
-                            }}>
-                                <span style={{
-                                    background: 'var(--primary)',
-                                    color: '#000',
-                                    width: '28px',
-                                    height: '28px',
-                                    borderRadius: '50%',
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <h3 style={{
+                                    color: 'var(--primary)',
+                                    fontSize: '1.25rem',
+                                    margin: 0,
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.9rem'
-                                }}>{index + 1}</span>
-                                Dados do Trecho {index + 1}
-                            </h3>
-                            
-                            {index > 1 && index === visibleLegsCount - 1 && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newLegs = [...formData.legs];
-                                        newLegs[index] = { ...initialLeg };
-                                        setFormData({ ...formData, legs: newLegs });
-                                        setVisibleLegsCount(prev => prev - 1);
-                                    }}
-                                    style={{
-                                        background: 'rgba(239, 68, 68, 0.1)',
-                                        border: '1px solid #ef4444',
-                                        color: '#ef4444',
-                                        padding: '6px 12px',
-                                        borderRadius: '8px',
-                                        fontSize: '0.8rem',
-                                        fontWeight: '600',
-                                        cursor: 'pointer',
+                                    gap: '12px'
+                                }}>
+                                    <span style={{
+                                        background: 'var(--primary)',
+                                        color: '#000',
+                                        width: '28px',
+                                        height: '28px',
+                                        borderRadius: '50%',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '6px',
-                                        transition: 'var(--transition)'
-                                    }}
-                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-                                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                                >
-                                    <Trash2 size={14} /> Remover Etapa
-                                </button>
-                            )}
-                        </div>
+                                        justifyContent: 'center',
+                                        fontSize: '0.9rem'
+                                    }}>{index + 1}</span>
+                                    Dados do Trecho {index + 1}
+                                </h3>
 
-                        <div className="form-container">
-                            <div className="form-group">
-                                <label htmlFor={`origin-${index}`} className="form-label">Origem</label>
-                                <div className="input-with-icon">
-                                    <MapPin size={18} className="input-icon" />
-                                    <input
-                                        id={`origin-${index}`}
-                                        type="text"
-                                        placeholder="Ex: São Paulo (SBSP)"
-                                        required={index === 0}
-                                        className="input-field"
-                                        value={leg.origin}
-                                        onChange={(e) => handleLegChange(index, 'origin', e.target.value)}
-                                        onFocus={(e) => handleLegChange(index, 'origin', e.target.value)}
-                                        autoComplete="off"
-                                    />
-                                    {activeAutocomplete.index === index && activeAutocomplete.field === 'origin' && activeAutocomplete.results.length > 0 && (
-                                        <div className="glass-morphism" style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            zIndex: 100,
-                                            marginTop: '8px',
-                                            borderRadius: '12px',
-                                            overflow: 'hidden',
-                                            background: 'rgba(20, 20, 20, 0.95)',
-                                            border: '1px solid var(--primary)'
-                                        }}>
-                                            {activeAutocomplete.results.map((ap, i) => (
-                                                <div
-                                                    key={i}
-                                                    onClick={() => selectAirport(index, 'origin', ap)}
-                                                    style={{
-                                                        padding: '12px 16px',
-                                                        cursor: 'pointer',
-                                                        borderBottom: i < activeAutocomplete.results.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                                                        fontSize: '0.9rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px'
-                                                    }}
-                                                    className="autocomplete-item"
-                                                >
-                                                    <Search size={14} color="var(--primary)" />
-                                                    {ap.label}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor={`destination-${index}`} className="form-label">Destino</label>
-                                <div className="input-with-icon">
-                                    <MapPin size={18} className="input-icon" />
-                                    <input
-                                        id={`destination-${index}`}
-                                        type="text"
-                                        placeholder="Ex: Angra dos Reis"
-                                        required={index === 0}
-                                        className="input-field"
-                                        value={leg.destination}
-                                        onChange={(e) => handleLegChange(index, 'destination', e.target.value)}
-                                        onFocus={(e) => handleLegChange(index, 'destination', e.target.value)}
-                                        autoComplete="off"
-                                    />
-                                    {activeAutocomplete.index === index && activeAutocomplete.field === 'destination' && activeAutocomplete.results.length > 0 && (
-                                        <div className="glass-morphism" style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            zIndex: 100,
-                                            marginTop: '8px',
-                                            borderRadius: '12px',
-                                            overflow: 'hidden',
-                                            background: 'rgba(20, 20, 20, 0.95)',
-                                            border: '1px solid var(--primary)'
-                                        }}>
-                                            {activeAutocomplete.results.map((ap, i) => (
-                                                <div
-                                                    key={i}
-                                                    onClick={() => selectAirport(index, 'destination', ap)}
-                                                    style={{
-                                                        padding: '12px 16px',
-                                                        cursor: 'pointer',
-                                                        borderBottom: i < activeAutocomplete.results.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-                                                        fontSize: '0.9rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px'
-                                                    }}
-                                                    className="autocomplete-item"
-                                                >
-                                                    <Search size={14} color="var(--primary)" />
-                                                    {ap.label}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor={`date-${index}`} className="form-label">Data do Voo</label>
-                                <div className="input-with-icon">
-                                    <Calendar size={18} className="input-icon" />
-                                    <input
-                                        id={`date-${index}`}
-                                        type="date"
-                                        min={today}
-                                        required={index === 0}
-                                        className="input-field"
-                                        value={leg.date}
-                                        onChange={(e) => handleLegChange(index, 'date', e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Tab' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                setTimeout(() => {
-                                                    document.getElementById(`time-${index}`)?.focus();
-                                                }, 10);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-group" style={{ position: 'relative' }}>
-                                <label htmlFor={`time-${index}`} className="form-label">Horário de Decolagem</label>
-                                <div className="input-with-icon">
-                                    <Clock size={14} className="input-icon" />
-                                    <input
-                                        id={`time-${index}`}
-                                        type="time"
-                                        required={index === 0}
-                                        className="input-field"
-                                        value={leg.time}
-                                        onChange={(e) => handleLegChange(index, 'time', e.target.value)}
-                                        onFocus={() => setTimePicker({ index, visible: true })}
-                                        onBlur={() => setTimeout(() => setTimePicker({ index: null, visible: false }), 200)}
-                                    />
-                                    {timePicker.visible && timePicker.index === index && (
-                                        <div className="glass-morphism" style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            maxHeight: '200px',
-                                            overflowY: 'auto',
-                                            zIndex: 1001,
-                                            marginTop: '8px',
-                                            background: 'rgba(20, 20, 20, 0.95)',
-                                            border: '1px solid var(--primary)',
-                                            borderRadius: '12px'
-                                        }}>
-                                            {commonTimes.map(t => (
-                                                <div
-                                                    key={t}
-                                                    onClick={() => handleLegChange(index, 'time', t)}
-                                                    style={{
-                                                        padding: '10px 16px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '0.9rem',
-                                                        borderBottom: '1px solid rgba(255,255,255,0.05)'
-                                                    }}
-                                                    className="autocomplete-item"
-                                                >
-                                                    {t}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Quantidade de Passageiros</label>
-                                <div className="input-with-icon">
-                                    <Users size={18} className="input-icon" />
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max={selectedAircraft?.passengers || 20}
-                                        className="input-field"
-                                        disabled={!leg.origin || !leg.destination}
-                                        placeholder={(!leg.origin || !leg.destination) ? "Preencha origem e destino" : ""}
-                                        value={leg.passengers === '' ? '' : leg.passengers}
-                                        onChange={(e) => {
-                                            const valStr = e.target.value;
-
-                                            // Handle empty input for better typing experience
-                                            if (valStr === '') {
-                                                const newLegs = [...formData.legs];
-                                                newLegs[index].passengers = '';
-                                                setFormData({ ...formData, legs: newLegs });
-                                                return;
-                                            }
-
-                                            let val = parseInt(valStr);
-                                            const max = selectedAircraft?.passengers || 20;
-
-                                            // Allow zero and clamp upper bound
-                                            if (val > max) val = max;
-                                            if (val < 0) val = 0;
-
+                                {index > 1 && index === visibleLegsCount - 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
                                             const newLegs = [...formData.legs];
-                                            // Ensure passengerData exists
-                                            if (!newLegs[index].passengerData) {
-                                                newLegs[index].passengerData = [];
-                                            }
-
-                                            // Sync the passenger list array
-                                            const currentData = [...newLegs[index].passengerData];
-                                            if (val > currentData.length) {
-                                                const toAdd = val - currentData.length;
-                                                for (let i = 0; i < toAdd; i++) {
-                                                    currentData.push({ name: '', document: '' });
-                                                }
-                                            } else if (val < currentData.length) {
-                                                currentData.splice(val);
-                                            }
-                                            newLegs[index].passengerData = currentData;
-
-                                            newLegs[index].passengers = val;
+                                            newLegs[index] = { ...initialLeg };
                                             setFormData({ ...formData, legs: newLegs });
+                                            setVisibleLegsCount(prev => prev - 1);
                                         }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-group full-width">
-                                <label className="form-label" style={{ marginBottom: '16px', display: 'block' }}>Lista de Passageiros</label>
-                                <div
-                                    className={`pax-container-${index}`}
-                                    onBlur={(e) => handlePaxBlur(index, e)}
-                                    style={{ display: 'flex', flexDirection: 'column', gap: '16px', opacity: (!leg.origin || !leg.destination) ? 0.5 : 1, pointerEvents: (!leg.origin || !leg.destination) ? 'none' : 'auto' }}
-                                >
-
-                                    {leg.passengerData?.map((pax, pIdx) => (
-                                        <motion.div
-                                            key={pIdx}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            style={{
-                                                display: 'grid',
-                                                gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr) auto',
-                                                gap: '12px',
-                                                alignItems: 'center',
-                                                background: 'rgba(255,255,255,0.03)',
-                                                padding: '16px',
-                                                borderRadius: '16px',
-                                                border: '1px solid var(--glass-border)'
-                                            }}
-                                        >
-                                            <div style={{ position: 'relative' }}>
-                                                <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                                                <input
-                                                    type="text"
-                                                    placeholder={`Nome do Passageiro ${pIdx + 1}`}
-                                                    className="input-field"
-                                                    style={{ paddingLeft: '36px', height: '42px', fontSize: '0.9rem' }}
-                                                    value={pax.name}
-                                                    onChange={(e) => {
-                                                        const newLegs = [...formData.legs];
-                                                        newLegs[index].passengerData[pIdx].name = e.target.value;
-                                                        setFormData({ ...formData, legs: newLegs });
-                                                    }}
-                                                />
-                                            </div>
-                                            <div style={{ position: 'relative' }}>
-                                                <FileText size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Documento (RG/CPF)"
-                                                    className="input-field"
-                                                    style={{ paddingLeft: '36px', height: '42px', fontSize: '0.9rem' }}
-                                                    value={pax.document}
-                                                    onChange={(e) => {
-                                                        const newLegs = [...formData.legs];
-                                                        newLegs[index].passengerData[pIdx].document = e.target.value;
-                                                        setFormData({ ...formData, legs: newLegs });
-                                                    }}
-                                                />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const newLegs = [...formData.legs];
-                                                    newLegs[index].passengerData.splice(pIdx, 1);
-                                                    newLegs[index].passengers = newLegs[index].passengerData.length;
-                                                    setFormData({ ...formData, legs: newLegs });
-                                                }}
-                                                style={{
-                                                    background: 'rgba(248, 113, 113, 0.1)',
-                                                    border: '1px solid #f87171',
-                                                    color: '#f87171',
-                                                    width: '32px',
-                                                    height: '32px',
-                                                    borderRadius: '8px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    cursor: 'pointer'
-                                                }}
-                                                title="Remover"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="form-group full-width" style={{ marginTop: '24px' }}>
-                                <label htmlFor={`catering-${index}`} className="form-label">Catering</label>
-                                <div className="input-with-icon" style={{ alignItems: 'flex-start' }}>
-                                    <Coffee size={18} className="input-icon" style={{ marginTop: '16px' }} />
-                                    <textarea
-                                        id={`catering-${index}`}
-                                        placeholder="Ex: &#10;• Frutas&#10;• Sanduiches&#10;• Bebidas..."
-                                        className="input-field"
                                         style={{
-                                            minHeight: '120px',
-                                            paddingTop: '14px',
-                                            lineHeight: '1.6',
-                                            resize: 'vertical',
-                                            paddingLeft: '48px'
+                                            background: 'rgba(239, 68, 68, 0.1)',
+                                            border: '1px solid #ef4444',
+                                            color: '#ef4444',
+                                            padding: '6px 12px',
+                                            borderRadius: '8px',
+                                            fontSize: '0.8rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            transition: 'var(--transition)'
                                         }}
-                                        value={leg.catering}
-                                        onChange={(e) => handleLegChange(index, 'catering', e.target.value)}
-                                    />
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                    >
+                                        <Trash2 size={14} /> Remover Etapa
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="form-container">
+                                <div className="form-group">
+                                    <label htmlFor={`origin-${index}`} className="form-label">Origem</label>
+                                    <div className="input-with-icon">
+                                        <MapPin size={18} className="input-icon" />
+                                        <input
+                                            id={`origin-${index}`}
+                                            type="text"
+                                            placeholder="Ex: São Paulo (SBSP)"
+                                            required={index === 0}
+                                            className="input-field"
+                                            value={leg.origin}
+                                            onChange={(e) => handleLegChange(index, 'origin', e.target.value)}
+                                            onFocus={(e) => handleLegChange(index, 'origin', e.target.value)}
+                                            autoComplete="off"
+                                        />
+                                        {activeAutocomplete.index === index && activeAutocomplete.field === 'origin' && activeAutocomplete.results.length > 0 && (
+                                            <div className="glass-morphism" style={{
+                                                position: 'absolute',
+                                                top: '100%',
+                                                left: 0,
+                                                right: 0,
+                                                zIndex: 100,
+                                                marginTop: '8px',
+                                                borderRadius: '12px',
+                                                overflow: 'hidden',
+                                                background: 'rgba(20, 20, 20, 0.95)',
+                                                border: '1px solid var(--primary)'
+                                            }}>
+                                                {activeAutocomplete.results.map((ap, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => selectAirport(index, 'origin', ap)}
+                                                        style={{
+                                                            padding: '12px 16px',
+                                                            cursor: 'pointer',
+                                                            borderBottom: i < activeAutocomplete.results.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                                            fontSize: '0.9rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '10px'
+                                                        }}
+                                                        className="autocomplete-item"
+                                                    >
+                                                        <Search size={14} color="var(--primary)" />
+                                                        {ap.label}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor={`destination-${index}`} className="form-label">Destino</label>
+                                    <div className="input-with-icon">
+                                        <MapPin size={18} className="input-icon" />
+                                        <input
+                                            id={`destination-${index}`}
+                                            type="text"
+                                            placeholder="Ex: Angra dos Reis"
+                                            required={index === 0}
+                                            className="input-field"
+                                            value={leg.destination}
+                                            onChange={(e) => handleLegChange(index, 'destination', e.target.value)}
+                                            onFocus={(e) => handleLegChange(index, 'destination', e.target.value)}
+                                            autoComplete="off"
+                                        />
+                                        {activeAutocomplete.index === index && activeAutocomplete.field === 'destination' && activeAutocomplete.results.length > 0 && (
+                                            <div className="glass-morphism" style={{
+                                                position: 'absolute',
+                                                top: '100%',
+                                                left: 0,
+                                                right: 0,
+                                                zIndex: 100,
+                                                marginTop: '8px',
+                                                borderRadius: '12px',
+                                                overflow: 'hidden',
+                                                background: 'rgba(20, 20, 20, 0.95)',
+                                                border: '1px solid var(--primary)'
+                                            }}>
+                                                {activeAutocomplete.results.map((ap, i) => (
+                                                    <div
+                                                        key={i}
+                                                        onClick={() => selectAirport(index, 'destination', ap)}
+                                                        style={{
+                                                            padding: '12px 16px',
+                                                            cursor: 'pointer',
+                                                            borderBottom: i < activeAutocomplete.results.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                                            fontSize: '0.9rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '10px'
+                                                        }}
+                                                        className="autocomplete-item"
+                                                    >
+                                                        <Search size={14} color="var(--primary)" />
+                                                        {ap.label}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor={`date-${index}`} className="form-label">Data do Voo</label>
+                                    <div className="input-with-icon">
+                                        <Calendar size={18} className="input-icon" />
+                                        <input
+                                            id={`date-${index}`}
+                                            type="date"
+                                            min={today}
+                                            required={index === 0}
+                                            className="input-field"
+                                            value={leg.date}
+                                            onChange={(e) => handleLegChange(index, 'date', e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Tab' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    setTimeout(() => {
+                                                        document.getElementById(`time-${index}`)?.focus();
+                                                    }, 10);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group" style={{ position: 'relative' }}>
+                                    <label htmlFor={`time-${index}`} className="form-label">Horário de Decolagem</label>
+                                    <div className="input-with-icon">
+                                        <Clock size={14} className="input-icon" />
+                                        <input
+                                            id={`time-${index}`}
+                                            type="time"
+                                            required={index === 0}
+                                            className="input-field"
+                                            value={leg.time}
+                                            onChange={(e) => handleLegChange(index, 'time', e.target.value)}
+                                            onFocus={() => setTimePicker({ index, visible: true })}
+                                            onBlur={() => setTimeout(() => setTimePicker({ index: null, visible: false }), 200)}
+                                        />
+                                        {timePicker.visible && timePicker.index === index && (
+                                            <div className="glass-morphism" style={{
+                                                position: 'absolute',
+                                                top: '100%',
+                                                left: 0,
+                                                right: 0,
+                                                maxHeight: '200px',
+                                                overflowY: 'auto',
+                                                zIndex: 1001,
+                                                marginTop: '8px',
+                                                background: 'rgba(20, 20, 20, 0.95)',
+                                                border: '1px solid var(--primary)',
+                                                borderRadius: '12px'
+                                            }}>
+                                                {commonTimes.map(t => (
+                                                    <div
+                                                        key={t}
+                                                        onClick={() => handleLegChange(index, 'time', t)}
+                                                        style={{
+                                                            padding: '10px 16px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.9rem',
+                                                            borderBottom: '1px solid rgba(255,255,255,0.05)'
+                                                        }}
+                                                        className="autocomplete-item"
+                                                    >
+                                                        {t}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Quantidade de Passageiros</label>
+                                    <div className="input-with-icon">
+                                        <Users size={18} className="input-icon" />
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={selectedAircraft?.passengers || 20}
+                                            className="input-field"
+                                            disabled={!leg.origin || !leg.destination}
+                                            placeholder={(!leg.origin || !leg.destination) ? "Preencha origem e destino" : ""}
+                                            value={leg.passengers === '' ? '' : leg.passengers}
+                                            onChange={(e) => {
+                                                const valStr = e.target.value;
+
+                                                // Handle empty input for better typing experience
+                                                if (valStr === '') {
+                                                    const newLegs = [...formData.legs];
+                                                    newLegs[index].passengers = '';
+                                                    setFormData({ ...formData, legs: newLegs });
+                                                    return;
+                                                }
+
+                                                let val = parseInt(valStr);
+                                                const max = selectedAircraft?.passengers || 20;
+
+                                                // Allow zero and clamp upper bound
+                                                if (val > max) val = max;
+                                                if (val < 0) val = 0;
+
+                                                const newLegs = [...formData.legs];
+                                                // Ensure passengerData exists
+                                                if (!newLegs[index].passengerData) {
+                                                    newLegs[index].passengerData = [];
+                                                }
+
+                                                // Sync the passenger list array
+                                                const currentData = [...newLegs[index].passengerData];
+                                                if (val > currentData.length) {
+                                                    const toAdd = val - currentData.length;
+                                                    for (let i = 0; i < toAdd; i++) {
+                                                        currentData.push({ name: '', document: '' });
+                                                    }
+                                                } else if (val < currentData.length) {
+                                                    currentData.splice(val);
+                                                }
+                                                newLegs[index].passengerData = currentData;
+
+                                                newLegs[index].passengers = val;
+                                                setFormData({ ...formData, legs: newLegs });
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group full-width">
+                                    <label className="form-label" style={{ marginBottom: '16px', display: 'block' }}>Lista de Passageiros</label>
+                                    <div
+                                        className={`pax-container-${index}`}
+                                        onBlur={(e) => handlePaxBlur(index, e)}
+                                        style={{ display: 'flex', flexDirection: 'column', gap: '16px', opacity: (!leg.origin || !leg.destination) ? 0.5 : 1, pointerEvents: (!leg.origin || !leg.destination) ? 'none' : 'auto' }}
+                                    >
+
+                                        {leg.passengerData?.map((pax, pIdx) => (
+                                            <motion.div
+                                                key={pIdx}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                style={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 1fr) auto',
+                                                    gap: '12px',
+                                                    alignItems: 'center',
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    padding: '16px',
+                                                    borderRadius: '16px',
+                                                    border: '1px solid var(--glass-border)'
+                                                }}
+                                            >
+                                                <div style={{ position: 'relative' }}>
+                                                    <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                                    <input
+                                                        type="text"
+                                                        placeholder={`Nome do Passageiro ${pIdx + 1}`}
+                                                        className="input-field"
+                                                        style={{ paddingLeft: '36px', height: '42px', fontSize: '0.9rem' }}
+                                                        value={pax.name}
+                                                        onChange={(e) => {
+                                                            const newLegs = [...formData.legs];
+                                                            newLegs[index].passengerData[pIdx].name = e.target.value;
+                                                            setFormData({ ...formData, legs: newLegs });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div style={{ position: 'relative' }}>
+                                                    <FileText size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Documento (RG/CPF)"
+                                                        className="input-field"
+                                                        style={{ paddingLeft: '36px', height: '42px', fontSize: '0.9rem' }}
+                                                        value={pax.document}
+                                                        onChange={(e) => {
+                                                            const newLegs = [...formData.legs];
+                                                            newLegs[index].passengerData[pIdx].document = e.target.value;
+                                                            setFormData({ ...formData, legs: newLegs });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newLegs = [...formData.legs];
+                                                        newLegs[index].passengerData.splice(pIdx, 1);
+                                                        newLegs[index].passengers = newLegs[index].passengerData.length;
+                                                        setFormData({ ...formData, legs: newLegs });
+                                                    }}
+                                                    style={{
+                                                        background: 'rgba(248, 113, 113, 0.1)',
+                                                        border: '1px solid #f87171',
+                                                        color: '#f87171',
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '8px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    title="Remover"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="form-group full-width" style={{ marginTop: '24px' }}>
+                                    <label htmlFor={`catering-${index}`} className="form-label">Catering</label>
+                                    <div className="input-with-icon" style={{ alignItems: 'flex-start' }}>
+                                        <Coffee size={18} className="input-icon" style={{ marginTop: '16px' }} />
+                                        <textarea
+                                            id={`catering-${index}`}
+                                            placeholder="Ex: &#10;• Frutas&#10;• Sanduiches&#10;• Bebidas..."
+                                            className="input-field"
+                                            style={{
+                                                minHeight: '120px',
+                                                paddingTop: '14px',
+                                                lineHeight: '1.6',
+                                                resize: 'vertical',
+                                                paddingLeft: '48px'
+                                            }}
+                                            value={leg.catering}
+                                            onChange={(e) => handleLegChange(index, 'catering', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     );
                 })}
 

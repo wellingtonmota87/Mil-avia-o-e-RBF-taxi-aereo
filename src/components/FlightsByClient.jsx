@@ -44,10 +44,10 @@ export default function FlightsByClient({ requests, onBack, onSelectRequest }) {
             case 'pendente': return { label: 'Pendência', color: '#fbbf24' };
             case 'concluido': return { label: 'Concluído', color: '#60a5fa' };
             case 'recusado': return { label: 'Recusado', color: '#f87171' };
-            case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#a855f7' };
+            case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#e78514ff' };
             case 'cancelamento': return { label: 'Cancelamento Solicitado', color: '#dc2626' };
-            case 'cancelado': return { label: 'Voo Cancelado', color: '#94a3b8' };
-            default: return { label: 'Nova Solicitação', color: '#f87171', isNew: true };
+            case 'cancelado': return { label: 'Voo Cancelado', color: '#e41212ff' };
+            default: return { label: 'Nova Solicitação', color: '#f71515ff', isNew: true };
         }
     };
 
