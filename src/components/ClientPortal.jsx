@@ -1,34 +1,37 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Lock, Mail, ChevronRight, Plane, Clock, CheckCircle, AlertCircle, ShieldAlert, LogOut, Plus, ArrowLeft, Calendar, MapPin, Coffee, Users, Edit, FileText, X, Layout, FilePlus, FileArchive } from 'lucide-react';
-import FleetCalendar from './FleetCalendar';
-import { formatDateTime } from '../utils/dateUtils';
-import { brazilianAirports } from '../data/airports';
+import React, { useState } from 'react'; // Importa React e hook de estado
+import { motion, AnimatePresence } from 'framer-motion'; // Importa componentes de animação
+import { User, Lock, Mail, ChevronRight, Plane, Clock, CheckCircle, AlertCircle, ShieldAlert, LogOut, Plus, ArrowLeft, Calendar, MapPin, Coffee, Users, Edit, FileText, X, Layout, FilePlus, FileArchive } from 'lucide-react'; // Importa ícones
+import FleetCalendar from './FleetCalendar'; // Importa componente de calendário da frota
+import { formatDateTime } from '../utils/dateUtils'; // Importa função para formatar data e hora
+import { brazilianAirports } from '../data/airports'; // Importa lista de aeroportos brasileiros
 
+// Componente principal do portal do cliente - permite login, visualização e edição de solicitações de voo
 export default function ClientPortal({ requests = [], currentUser, onLogin, onLogout, onNewRequest, onUpdateRequest, onEditRequest, onBack }) {
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-    const [viewingDetails, setViewingDetails] = useState(null); // { type: 'pax' | 'catering' | 'full', leg, idx }
-    const [showCalendar, setShowCalendar] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingRequest, setEditingRequest] = useState(null);
-    const [showConfirmation, setShowConfirmation] = useState(false);
-    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-    const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] });
-    const [showPackModal, setShowPackModal] = useState(false);
-    const [selectedPackRequest, setSelectedPackRequest] = useState(null);
+    const [isRegistering, setIsRegistering] = useState(false); // Controla se está na tela de cadastro ou login
+    const [selectedRequest, setSelectedRequest] = useState(null); // Armazena a solicitação selecionada para visualização
+    const [formData, setFormData] = useState({ name: '', email: '', password: '' }); // Dados do formulário de login/cadastro
+    const [viewingDetails, setViewingDetails] = useState(null); // Controla qual modal de detalhes está aberto { type: 'pax' | 'catering' | 'full', leg, idx }
+    const [showCalendar, setShowCalendar] = useState(false); // Controla exibição do calendário de frota
+    const [isEditing, setIsEditing] = useState(false); // Controla se está no modo de edição
+    const [editingRequest, setEditingRequest] = useState(null); // Armazena a solicitação sendo editada
+    const [showConfirmation, setShowConfirmation] = useState(false); // Controla modal de confirmação de alteração
+    const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false); // Controla modal de confirmação de logout
+    const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] }); // Controla o autocomplete de aeroportos
+    const [showPackModal, setShowPackModal] = useState(false); // Controla modal de geração de pack de voo
+    const [selectedPackRequest, setSelectedPackRequest] = useState(null); // Armazena solicitação selecionada para gerar pack
 
-    // Scroll to top on internal navigation
+    // Hook para rolar para o topo da página quando navegar entre telas
     React.useEffect(() => {
         window.scrollTo(0, 0);
     }, [selectedRequest, showCalendar, isEditing]);
 
+    // Inicia o modo de edição de uma solicitação
     const handleStartEdit = () => {
-        setEditingRequest(JSON.parse(JSON.stringify(selectedRequest)));
+        setEditingRequest(JSON.parse(JSON.stringify(selectedRequest))); // Cria uma cópia profunda da solicitação
         setIsEditing(true);
     };
 
+    // Atualiza um campo específico de um trecho durante a edição
     const handleLegUpdate = (idx, field, value) => {
         if (!editingRequest) return;
         const newReq = { ...editingRequest };
@@ -50,16 +53,19 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
         }
     };
 
+    // Seleciona um aeroporto do autocomplete e preenche o campo
     const selectAirport = (index, field, airport) => {
         handleLegUpdate(index, field, airport.label);
         setActiveAutocomplete({ index: null, field: null, results: [] });
     };
 
+    // Verifica se houve alterações na solicitação
     const hasChanges = () => {
         if (!selectedRequest || !editingRequest) return false;
         return JSON.stringify(selectedRequest.legs) !== JSON.stringify(editingRequest.legs);
     };
 
+    // Valida se as datas dos trechos estão em ordem cronológica
     const validateDates = () => {
         if (!editingRequest || !editingRequest.legs) return { valid: true };
         for (let i = 0; i < editingRequest.legs.length - 1; i++) {
@@ -75,6 +81,7 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
         return { valid: true };
     };
 
+    // Processa o login ou cadastro do usuário
     const handleAuth = (e) => {
         e.preventDefault();
         // Generate a stable ID based on email to avoid disappearance on re-login
@@ -87,6 +94,7 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
         });
     };
 
+    // Retorna informações de status (label, cor, ícone) baseado no status da solicitação
     const getStatusInfo = (status, request = null) => {
         // Verifica se é uma edição (novo + oldData) ou status explícito de alteração
         if ((status === 'novo' && request?.oldData) || status === 'alteracao_solicitada') {

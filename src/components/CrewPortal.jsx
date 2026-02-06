@@ -256,43 +256,71 @@ export default function CrewPortal({ requests = [] }) {
                                         <div style={{
                                             flex: 1,
                                             display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px'
+                                            flexDirection: 'column',
+                                            gap: '8px'
                                         }}>
+                                            {/* Origem */}
                                             <div style={{
-                                                fontSize: '1.1rem',
-                                                color: '#fff',
-                                                minWidth: '100px'
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px'
                                             }}>
-                                                {leg.origin}
+                                                <div style={{
+                                                    fontSize: '1.1rem',
+                                                    color: '#fff',
+                                                    minWidth: '100px'
+                                                }}>
+                                                    {leg.origin}
+                                                </div>
+
+                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>-</div>
+
+                                                <div style={{
+                                                    fontSize: '0.8rem',
+                                                    color: 'var(--text-muted)'
+                                                }}>
+                                                    {leg.originCity || leg.origin}
+                                                </div>
                                             </div>
 
-                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>-</div>
-
+                                            {/* Seta para baixo */}
                                             <div style={{
-                                                fontSize: '0.8rem',
-                                                color: 'var(--text-muted)'
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                paddingLeft: '8px'
                                             }}>
-                                                {leg.originCity || leg.origin}
+                                                <ChevronRight
+                                                    size={16}
+                                                    style={{
+                                                        color: 'var(--primary)',
+                                                        transform: 'rotate(90deg)'
+                                                    }}
+                                                />
                                             </div>
 
-                                            <ChevronRight size={16} style={{ color: 'var(--primary)' }} />
-
+                                            {/* Destino */}
                                             <div style={{
-                                                fontSize: '1.1rem',
-                                                color: '#fff',
-                                                minWidth: '100px'
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px'
                                             }}>
-                                                {leg.destination}
-                                            </div>
+                                                <div style={{
+                                                    fontSize: '1.1rem',
+                                                    color: '#fff',
+                                                    minWidth: '100px'
+                                                }}>
+                                                    {leg.destination}
+                                                </div>
 
-                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>-</div>
+                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>-</div>
 
-                                            <div style={{
-                                                fontSize: '0.8rem',
-                                                color: 'var(--text-muted)'
-                                            }}>
-                                                {leg.destinationCity || leg.destination}
+                                                <div style={{
+                                                    fontSize: '0.8rem',
+                                                    color: 'var(--text-muted)'
+                                                }}>
+                                                    {leg.destinationCity || leg.destination}
+                                                </div>
                                             </div>
                                         </div>
 

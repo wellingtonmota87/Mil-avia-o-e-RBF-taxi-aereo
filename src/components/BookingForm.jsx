@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { Calendar, MapPin, Users, Send, Plane, Clock, Coffee, FileText, User, Mail, CheckCircle, AlertCircle, Trash2, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { brazilianAirports } from '../data/airports';
+import React, { useState } from 'react'; // Importa recursos básicos do React
+import { Calendar, MapPin, Users, Send, Plane, Clock, Coffee, FileText, User, Mail, CheckCircle, AlertCircle, Trash2, Search } from 'lucide-react'; // Importa ícones visuais
+import { motion, AnimatePresence } from 'framer-motion'; // Importa componentes de animação
+import { brazilianAirports } from '../data/airports'; // Importa a lista de aeroportos brasileiros para busca
 
-export default function BookingForm({ selectedAircraft, onSubmit, initialData, isManualFlight = false, onManualFlightSubmit, onCancel }) {
-    const initialLeg = {
-        origin: '',
-        destination: '',
-        date: '',
-        time: '',
-        passengers: 1,
-        catering: '',
-        passengerList: '',
-        passengerData: [{ name: '', document: '' }] // Initialize with one empty passenger by default matches passengers: 1
+export default function BookingForm({ selectedAircraft, onSubmit, initialData, isManualFlight = false, onManualFlightSubmit, onCancel }) { // Define o componente principal do formulário de reserva
+    const initialLeg = { // Estrutura inicial para cada trecho do voo
+        origin: '', // Aeroporto de origem
+        destination: '', // Aeroporto de destino
+        date: '', // Data do voo
+        time: '', // Horário de decolagem
+        passengers: 1, // Número de passageiros
+        catering: '', // Observações de serviço de bordo
+        passengerList: '', // Lista textual de passageiros (opcional)
+        passengerData: [{ name: '', document: '' }] // Dados detalhados de cada passageiro
     };
 
-    const [formData, setFormData] = useState(() => {
-        const processLeg = (leg) => {
+    const [formData, setFormData] = useState(() => { // Estado que armazena todos os dados do formulário
+        const processLeg = (leg) => { // Função auxiliar para garantir que os dados dos passageiros estejam corretos
             if (!leg.passengerData || !Array.isArray(leg.passengerData)) {
                 const count = parseInt(leg.passengers) || 1;
                 const pData = [];
@@ -29,9 +29,9 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         };
 
         let initialDataObj;
-        if (initialData) {
+        if (initialData) { // Se houver dados iniciais (edição), processa os trechos existentes
             const legs = [...initialData.legs].map(processLeg);
-            while (legs.length < 5) {
+            while (legs.length < 5) { // Garante sempre 5 trechos disponíveis internamente
                 legs.push({ ...initialLeg });
             }
             initialDataObj = {
@@ -40,11 +40,11 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
                 name: initialData.name || '',
                 requestor: initialData.requestor || ''
             };
-        } else {
+        } else { // Caso contrário, cria um novo formulário limpo
             initialDataObj = {
                 legs: Array(5).fill(null).map((_, i) => ({
                     ...initialLeg,
-                    origin: i === 0 ? 'SBBH - BELO HORIZONTE/MG' : ''
+                    origin: i === 0 ? 'SBBH - BELO HORIZONTE/MG' : '' // Define Pampulha como origem padrão no 1º trecho
                 })),
                 email: '',
                 name: '',
@@ -52,7 +52,7 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
             };
         }
 
-        // Final safeguard for first leg origin if it's a new request
+        // Garante que o primeiro trecho tenha origem padrão se for uma nova solicitação
         if (!initialData && initialDataObj.legs[0] && !initialDataObj.legs[0].origin) {
             initialDataObj.legs[0].origin = 'SBBH - BELO HORIZONTE/MG';
         }
@@ -60,12 +60,12 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         return initialDataObj;
     });
 
-    const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] });
-    const [timePicker, setTimePicker] = useState({ index: null, visible: false });
+    const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] }); // Controla o buscador de aeroportos
+    const [timePicker, setTimePicker] = useState({ index: null, visible: false }); // Controla a seleção de horário
 
-    const [visibleLegsCount, setVisibleLegsCount] = useState(2);
+    const [visibleLegsCount, setVisibleLegsCount] = useState(2); // Controla quantos trechos são visíveis inicialmente
 
-    React.useEffect(() => {
+    React.useEffect(() => { // Hook para ajustar a visibilidade dos trechos quando carregados dados existentes
         if (initialData && initialData.legs) {
             const valid = initialData.legs.filter(l => l.origin || l.destination).length;
             setVisibleLegsCount(Math.max(2, valid));
@@ -74,13 +74,14 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         }
     }, [initialData]);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0]; // Obtém a data de hoje para o limite mínimo do calendário
 
-    const handleLegChange = (index, field, value) => {
+    const handleLegChange = (index, field, value) => { // Gerencia alterações nos campos de cada trecho
         const newLegs = [...formData.legs];
-        const upperValue = value.toUpperCase();
+        const upperValue = value.toUpperCase(); // Converte texto para maiúsculas (padrão aeronáutico)
         newLegs[index][field] = upperValue;
 
+        // Lógica de busca de aeroportos (autocomplete)
         if (field === 'origin' || field === 'destination') {
             const results = brazilianAirports.filter(ap =>
                 ap.icao.includes(upperValue) ||
@@ -93,9 +94,10 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
 
         const isPampulha = ['SBBH', 'PAMPULHA', 'BELO HORIZONTE'].some(key => upperValue.includes(key));
 
+        // Lógica para preencher automaticamente a origem do próximo trecho com o destino do atual
         if (field === 'destination' && newLegs[index + 1]) {
             if (isPampulha) {
-                newLegs[index + 1].origin = '';
+                newLegs[index + 1].origin = ''; // Se voltar para Pampulha, não assume como próxima origem
             } else {
                 newLegs[index + 1].origin = upperValue;
             }
@@ -104,10 +106,11 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         setFormData({ ...formData, legs: newLegs });
     };
 
-    const selectAirport = (index, field, airport) => {
+    const selectAirport = (index, field, airport) => { // Função chamada ao selecionar um aeroporto na busca
         const newLegs = [...formData.legs];
         newLegs[index][field] = airport.label;
 
+        // Repete o destino como próxima origem se não for Pampulha
         if (field === 'destination' && newLegs[index + 1]) {
             const isPampulha = ['SBBH', 'PAMPULHA'].some(key => airport.label.toUpperCase().includes(key));
             if (isPampulha) {
@@ -118,17 +121,17 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         }
 
         setFormData({ ...formData, legs: newLegs });
-        setActiveAutocomplete({ index: null, field: null, results: [] });
+        setActiveAutocomplete({ index: null, field: null, results: [] }); // Limpa a busca
     };
 
-    const commonTimes = Array.from({ length: 48 }, (_, i) => {
+    const commonTimes = Array.from({ length: 48 }, (_, i) => { // Gera uma lista de horários de 30 em 30 minutos
         const h = Math.floor(i / 2).toString().padStart(2, '0');
         const m = (i % 2 === 0 ? '00' : '30');
         return `${h}:${m}`;
     });
 
-    const handlePaxBlur = (index, e) => {
-        // Prevent trigger if clicking inside the same container
+    const handlePaxBlur = (index, e) => { // Acionado quando o usuário termina de preencher os passageiros
+        // Impede o disparo se o clique for dentro do mesmo container
         const nextTarget = e.relatedTarget;
         if (nextTarget && nextTarget.closest('.pax-container-' + index)) {
             return;
@@ -137,10 +140,9 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         const leg = formData.legs[index];
         const hasData = leg.passengerData.some(p => p.name || p.document);
 
-        if (hasData) {
+        if (hasData) { // Se houver dados preenchidos, pergunta se deseja replicar para os próximos trechos
             const nextLegsWithRoute = formData.legs.slice(index + 1).filter(l => l.origin && l.destination);
             if (nextLegsWithRoute.length > 0) {
-                // Using a slight delay to allow the new focus to settle before showing modal
                 setTimeout(() => {
                     if (confirm("Deseja usar esta mesma lista de passageiros para as próximas etapas de voo?")) {
                         const newLegs = [...formData.legs];
@@ -158,11 +160,11 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         }
     };
 
-    const handleContactChange = (e) => {
+    const handleContactChange = (e) => { // Gerencia campos simples como e-mail e nome do solicitante
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e) => { // Envia o formulário
         e.preventDefault();
         if (!selectedAircraft) {
             alert('Por favor, selecione uma aeronave primeiro.');
@@ -170,18 +172,18 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
             return;
         }
 
-        // Filter out empty legs (only require the first leg)
+        // Filtra trechos vazios (mantém apenas o primeiro ou os preenchidos)
         const activeLegs = formData.legs.filter((leg, idx) => idx === 0 || leg.origin || leg.destination);
         onSubmit({ ...formData, legs: activeLegs, aircraft: selectedAircraft });
     };
 
-    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false); // Estado para o modal de cancelamento
 
-    const handleCancelClick = () => {
+    const handleCancelClick = () => { // Abre o modal de cancelamento
         setShowCancelModal(true);
     };
 
-    const confirmCancel = () => {
+    const confirmCancel = () => { // Confirma o cancelamento do voo
         if (onCancel && initialData) {
             onCancel(initialData.id);
         }
@@ -202,7 +204,7 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px', flexWrap: 'wrap', gap: '16px' }}>
                 <h2 style={{ margin: 0, color: 'var(--primary)', fontSize: '2.5rem' }}>
-                    {initialData ? 'Editar Voo' : 'Solicitar Voo'} <span style={{ fontSize: '0.8rem', verticalAlign: 'middle', opacity: 0.5 }}>v2.2.4</span>
+                    {initialData ? 'Editar Voo' : 'Solicitar Voo'} <span style={{ fontSize: '0.8rem', verticalAlign: 'middle', opacity: 0.5 }}>v2.2.4</span> {/* Título dinâmico */}
                 </h2>
                 {initialData && onCancel && (
                     <button
@@ -284,7 +286,7 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
                                 >
                                     Não, Manter
                                 </button>
-                                <button
+                                <button // Botão de confirmação de cancelamento
                                     onClick={confirmCancel}
                                     className="premium-button"
                                     style={{
@@ -303,7 +305,7 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
                 )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}> {/* Início do formulário principal */}
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr',

@@ -1,51 +1,53 @@
-import React, { useState } from 'react';
-import { ShieldAlert, Send, CheckCircle, Clock, ListChecks, User, Mail, Calendar, MapPin, Coffee, FileText, ChevronRight, ArrowLeft, Plane, Users, AlertCircle, Edit, Save, X, Plus, Trash2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import BookingForm from './BookingForm';
-import AircraftSelector from './AircraftSelector';
-import CoordinatorHome from './CoordinatorHome';
-import FlightsByClient from './FlightsByClient';
-import ManageRequesters from './ManageRequesters';
-import ManageCrew from './ManageCrew';
-import { Fingerprint as FingerprintIcon } from 'lucide-react';
-import { formatDate, getTimestamp, formatDateTime } from '../utils/dateUtils';
-import { brazilianAirports } from '../data/airports';
+import React, { useState } from 'react'; // Importa React e hook de estado
+import { ShieldAlert, Send, CheckCircle, Clock, ListChecks, User, Mail, Calendar, MapPin, Coffee, FileText, ChevronRight, ArrowLeft, Plane, Users, AlertCircle, Edit, Save, X, Plus, Trash2 } from 'lucide-react'; // Importa ícones
+import { motion, AnimatePresence } from 'framer-motion'; // Importa componentes de animação
+import BookingForm from './BookingForm'; // Importa formulário de reserva
+import AircraftSelector from './AircraftSelector'; // Importa seletor de aeronaves
+import CoordinatorHome from './CoordinatorHome'; // Importa tela inicial do coordenador
+import FlightsByClient from './FlightsByClient'; // Importa visualização de voos por cliente
+import ManageRequesters from './ManageRequesters'; // Importa gerenciamento de solicitantes
+import ManageCrew from './ManageCrew'; // Importa gerenciamento de tripulação
+import { Fingerprint as FingerprintIcon } from 'lucide-react'; // Importa ícone de impressão digital
+import { formatDate, getTimestamp, formatDateTime } from '../utils/dateUtils'; // Importa funções de data
+import { brazilianAirports } from '../data/airports'; // Importa lista de aeroportos brasileiros
 
+// Componente principal do painel do coordenador - gerencia autenticação, solicitações de voo e operações
 export default function CoordinatorDashboard({ requests = [], onUpdateStatus, onGeneratePack }) {
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [isPendingApproval, setIsPendingApproval] = useState(false);
-    const [authData, setAuthData] = useState({ name: '', email: '', password: '' });
-    const [authError, setAuthError] = useState('');
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [showPendingModal, setShowPendingModal] = useState(false);
-    const [pendingReason, setPendingReason] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedRequest, setEditedRequest] = useState(null);
-    const [showRefusalModal, setShowRefusalModal] = useState(false);
-    const [refusalReason, setRefusalReason] = useState('');
-    const [viewingDetails, setViewingDetails] = useState(null); // { type: 'pax' | 'catering' | 'full', leg, idx }
-    const [showManualFlightModal, setShowManualFlightModal] = useState(false);
-    const [manualFlightStep, setManualFlightStep] = useState('aircraft'); // 'aircraft' or 'form'
-    const [selectedAircraftForManual, setSelectedAircraftForManual] = useState(null);
-    const [manualFlightPendingData, setManualFlightPendingData] = useState(null);
-    const [showManualPendingModal, setShowManualPendingModal] = useState(false);
-    const [manualPendingReason, setManualPendingReason] = useState('');
-    const [currentView, setCurrentView] = useState('home'); // 'home', 'flight-panel', 'by-client'
-    const [filterCanceled, setFilterCanceled] = useState(false);
-    const [crewDatabase] = useState(() => {
+    const [isAuthorized, setIsAuthorized] = useState(false); // Controla se o coordenador está autenticado
+    const [isRegistering, setIsRegistering] = useState(false); // Controla se está na tela de cadastro
+    const [isPendingApproval, setIsPendingApproval] = useState(false); // Controla se está aguardando aprovação
+    const [authData, setAuthData] = useState({ name: '', email: '', password: '' }); // Dados de autenticação
+    const [authError, setAuthError] = useState(''); // Mensagem de erro de autenticação
+    const [selectedRequest, setSelectedRequest] = useState(null); // Solicitação selecionada para visualização/edição
+    const [showPendingModal, setShowPendingModal] = useState(false); // Controla modal de pendência
+    const [pendingReason, setPendingReason] = useState(''); // Razão da pendência
+    const [isEditing, setIsEditing] = useState(false); // Controla se está editando uma solicitação
+    const [editedRequest, setEditedRequest] = useState(null); // Solicitação sendo editada
+    const [showRefusalModal, setShowRefusalModal] = useState(false); // Controla modal de recusa
+    const [refusalReason, setRefusalReason] = useState(''); // Razão da recusa
+    const [viewingDetails, setViewingDetails] = useState(null); // Controla visualização de detalhes { type: 'pax' | 'catering' | 'full', leg, idx }
+    const [showManualFlightModal, setShowManualFlightModal] = useState(false); // Controla modal de voo manual
+    const [manualFlightStep, setManualFlightStep] = useState('aircraft'); // Etapa do voo manual: 'aircraft' ou 'form'
+    const [selectedAircraftForManual, setSelectedAircraftForManual] = useState(null); // Aeronave selecionada para voo manual
+    const [manualFlightPendingData, setManualFlightPendingData] = useState(null); // Dados pendentes de voo manual
+    const [showManualPendingModal, setShowManualPendingModal] = useState(false); // Controla modal de pendência de voo manual
+    const [manualPendingReason, setManualPendingReason] = useState(''); // Razão da pendência de voo manual
+    const [currentView, setCurrentView] = useState('home'); // Visualização atual: 'home', 'flight-panel', 'by-client'
+    const [filterCanceled, setFilterCanceled] = useState(false); // Filtro para voos cancelados
+    const [crewDatabase] = useState(() => { // Banco de dados de tripulação
         const stored = localStorage.getItem('crew_members');
         return stored ? JSON.parse(stored) : [];
     });
-    const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] });
+    const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] }); // Controla autocomplete de aeroportos
 
-    // Scroll to top on internal navigation
+    // Hook para rolar para o topo ao navegar entre telas
     React.useEffect(() => {
         window.scrollTo(0, 0);
     }, [currentView, selectedRequest, viewingDetails]);
 
-    const SESSION_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+    const SESSION_DURATION = 2 * 60 * 60 * 1000; // Duração da sessão: 2 horas em milissegundos
 
+    // Verifica e valida a sessão do coordenador ao carregar o componente
     React.useEffect(() => {
         const checkSession = () => {
             const session = localStorage.getItem('coordinatorSession');
@@ -66,6 +68,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         checkSession();
     }, [SESSION_DURATION]);
 
+    // Obtém a lista de coordenadores armazenados no localStorage
     const getStoredCoordinators = () => {
         const stored = localStorage.getItem('coordinators');
         return stored ? JSON.parse(stored) : [
@@ -73,6 +76,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         ];
     };
 
+    // Processa autenticação (login ou cadastro) do coordenador
     const handleAuth = (e) => {
         e.preventDefault();
         setAuthError('');
@@ -114,6 +118,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
 
 
 
+    // Executa ação de aprovação, recusa ou pendência em uma solicitação
     const handleAction = (status, observation = null) => {
         onUpdateStatus(selectedRequest.id, status, observation);
         setSelectedRequest(null);
@@ -125,16 +130,19 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         setEditedRequest(null);
     };
 
+    // Inicia o modo de edição de uma solicitação
     const handleStartEdit = () => {
         setEditedRequest(JSON.parse(JSON.stringify(selectedRequest)));
         setIsEditing(true);
     };
 
+    // Cancela a edição e descarta alterações
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditedRequest(null);
     };
 
+    // Salva as alterações feitas na solicitação
     const handleSaveEdit = () => {
         // When coordinator saves, we also reset status to 'novo' to ensure full re-evaluation
         const finalizedRequest = {
@@ -149,6 +157,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         setEditedRequest(null);
     };
 
+    // Verifica se um campo foi modificado comparando com os dados originais
     const isModified = (field, currentVal, legIndex = null) => {
         if (!selectedRequest.oldData) return false;
 
@@ -161,10 +170,12 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         return selectedRequest.oldData[field] !== currentVal;
     };
 
+    // Atualiza um campo da solicitação durante a edição
     const handleEditChange = (field, value) => {
         setEditedRequest(prev => ({ ...prev, [field]: value }));
     };
 
+    // Lista de aeronaves disponíveis
     const aircrafts = [
         { id: 1, name: 'PT-RBZ | Global 6000', type: 'Ultra Long Range', passengers: 13 },
         { id: 2, name: 'PS-MEP | Citation CJ4', type: 'Light Jet', passengers: 10 },
@@ -172,6 +183,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         { id: 4, name: 'PS-MIB | Citation M2', type: 'Entry Level Jet', passengers: 6 }
     ];
 
+    // Atualiza a aeronave selecionada durante a edição
     const handleAircraftChange = (id) => {
         const ac = aircrafts.find(a => a.id === parseInt(id));
         if (ac) {
@@ -179,6 +191,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         }
     };
 
+    // Atualiza um campo de um trecho específico durante a edição
     const handleEditLegChange = (index, field, value) => {
         const newLegs = [...editedRequest.legs];
         const upperValue = value.toUpperCase();
@@ -196,6 +209,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         }
     };
 
+    // Atualiza dados da tripulação durante a edição
     const handleEditCrewChange = (index, field, value) => {
         const newCrew = [...(editedRequest.crew || [{}, {}])];
         newCrew[index] = { ...newCrew[index], [field]: value };
@@ -271,6 +285,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
 
 
 
+    // Retorna informações de status (label e cor) baseado no status da solicitação
     const getStatusInfo = (status, request = null) => {
         if (status === 'novo' && request?.oldData) {
             return { label: 'Edição Solicitada', color: '#a855f7' }; // Lilac

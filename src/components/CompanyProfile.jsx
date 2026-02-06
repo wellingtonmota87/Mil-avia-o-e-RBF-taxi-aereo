@@ -1,22 +1,23 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plane, Shield, Award, MapPin, Users, Fuel, Gauge, X, Info, Zap, Wind } from 'lucide-react';
-import logoMil from '../assets/logo-mil-real.png';
-import logoRbf from '../assets/logo-rbf.png';
+import React from 'react'; // Importa a biblioteca React
+import { motion, AnimatePresence } from 'framer-motion'; // Importa componentes de animação
+import { ArrowLeft, Plane, Shield, Award, MapPin, Users, Fuel, Gauge, X, Info, Zap, Wind } from 'lucide-react'; // Importa ícones
+import logoMil from '../assets/logo-mil-real.png'; // Importa logo da MIL Aviação
+import logoRbf from '../assets/logo-rbf.png'; // Importa logo da RBF Táxi Aéreo
 
-// Import aircraft images
-import rbzImage from '../assets/PT-RBZ.jpg';
-import mepImage from '../assets/PS-MEP.jpg';
-import krtImage from '../assets/PR-KRT.jpg';
-import mibImage from '../assets/PS-MIB.jpg';
+// Importa imagens das aeronaves
+import rbzImage from '../assets/PT-RBZ.jpg'; // Imagem do Global 6000
+import mepImage from '../assets/PS-MEP.jpg'; // Imagem do Citation CJ4
+import krtImage from '../assets/PR-KRT.jpg'; // Imagem do Citation CJ2+
+import mibImage from '../assets/PS-MIB.jpg'; // Imagem do Citation M2
 
+// Dados das empresas (MIL Aviação e RBF Táxi Aéreo) com suas frotas e características
 const COMPANY_DATA = {
-    mil: {
-        name: 'MIL Aviação',
-        logo: logoMil,
-        description: `A MIL Aviação é referência em aviação executiva, oferecendo serviços de fretamento com excelência e segurança. Com uma frota moderna e diversificada, atendemos às necessidades de mobilidade corporativa e lazer com o mais alto padrão de qualidade. Nossa equipe altamente qualificada garante uma experiência de voo impecável, do planejamento ao desembarque.`,
-        features: ['Segurança Certificada', 'Atendimento Personalizado', 'Frota Moderna', 'Cobertura Nacional'],
-        aircrafts: [
+    mil: { // Dados da empresa MIL Aviação
+        name: 'MIL Aviação', // Nome da empresa
+        logo: logoMil, // Logo da empresa
+        description: `A MIL Aviação é referência em aviação executiva, oferecendo serviços de fretamento com excelência e segurança. Com uma frota moderna e diversificada, atendemos às necessidades de mobilidade corporativa e lazer com o mais alto padrão de qualidade. Nossa equipe altamente qualificada garante uma experiência de voo impecável, do planejamento ao desembarque.`, // Descrição da empresa
+        features: ['Segurança Certificada', 'Atendimento Personalizado', 'Frota Moderna', 'Cobertura Nacional'], // Características principais
+        aircrafts: [ // Lista de aeronaves da MIL Aviação
             {
                 id: 2,
                 name: 'PS-MEP | Citation CJ4',
@@ -46,12 +47,12 @@ const COMPANY_DATA = {
             }
         ]
     },
-    rbf: {
-        name: 'RBF Táxi Aéreo',
-        logo: logoRbf,
-        description: `A RBF Táxi Aéreo destaca-se no mercado pela operação de aeronaves de longo alcance e alto desempenho. Especializada em voos internacionais e intercontinentais, a RBF oferece conforto inigualável e eficiência operacional. Nossa missão é conectar o mundo com agilidade, proporcionando aos nossos clientes o máximo em privacidade e exclusividade.`,
-        features: ['Voos Internacionais', 'Longo Alcance', 'Cabine Premium', 'Privacidade Total'],
-        aircrafts: [
+    rbf: { // Dados da empresa RBF Táxi Aéreo
+        name: 'RBF Táxi Aéreo', // Nome da empresa
+        logo: logoRbf, // Logo da empresa
+        description: `A RBF Táxi Aéreo destaca-se no mercado pela operação de aeronaves de longo alcance e alto desempenho. Especializada em voos internacionais e intercontinentais, a RBF oferece conforto inigualável e eficiência operacional. Nossa missão é conectar o mundo com agilidade, proporcionando aos nossos clientes o máximo em privacidade e exclusividade.`, // Descrição da empresa
+        features: ['Voos Internacionais', 'Longo Alcance', 'Cabine Premium', 'Privacidade Total'], // Características principais
+        aircrafts: [ // Lista de aeronaves da RBF Táxi Aéreo
             {
                 id: 1,
                 name: 'PT-RBZ | Global 6000',
@@ -65,11 +66,12 @@ const COMPANY_DATA = {
     }
 };
 
-export default function CompanyProfile({ companyId, onBack }) {
-    const [selectedAircraft, setSelectedAircraft] = React.useState(null);
-    const company = COMPANY_DATA[companyId];
+// Componente principal que exibe o perfil de uma empresa (MIL ou RBF)
+export default function CompanyProfile({ companyId, onBack }) { // Recebe o ID da empresa e função de voltar
+    const [selectedAircraft, setSelectedAircraft] = React.useState(null); // Estado para controlar qual aeronave está selecionada
+    const company = COMPANY_DATA[companyId]; // Busca os dados da empresa pelo ID
 
-    if (!company) return null;
+    if (!company) return null; // Se a empresa não existir, não renderiza nada
 
     return (
         <div className="container company-profile-container">
