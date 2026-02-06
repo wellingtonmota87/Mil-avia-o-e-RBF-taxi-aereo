@@ -41,13 +41,13 @@ export default function FlightsByClient({ requests, onBack, onSelectRequest }) {
         }
         switch (status) {
             case 'aprovado': return { label: 'Aprovado', color: '#34d399' };
-            case 'pendente': return { label: 'Pendência', color: '#fbbf24' };
+            case 'pendente': return { label: 'Pendência', color: '#f87171' };
             case 'concluido': return { label: 'Concluído', color: '#60a5fa' };
             case 'recusado': return { label: 'Recusado', color: '#f87171' };
-            case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#e78514ff' };
-            case 'cancelamento': return { label: 'Cancelamento Solicitado', color: '#dc2626' };
-            case 'cancelado': return { label: 'Voo Cancelado', color: '#e41212ff' };
-            default: return { label: 'Nova Solicitação', color: '#f71515ff', isNew: true };
+            case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#a855f7' };
+            case 'cancelamento': return { label: 'Cancelamento Solicitada', color: '#f87171' };
+            case 'cancelado': return { label: 'Voo Cancelado', color: '#94a3b8' };
+            default: return { label: 'Nova Solicitação', color: '#f87171', isNew: true };
         }
     };
 
@@ -224,7 +224,7 @@ export default function FlightsByClient({ requests, onBack, onSelectRequest }) {
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
                                 <div style={{
-                                    background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                                    background: 'linear-gradient(135deg, #f87171 0%, #ef4444 100%)',
                                     width: '48px',
                                     height: '48px',
                                     borderRadius: '12px',
@@ -271,9 +271,9 @@ export default function FlightsByClient({ requests, onBack, onSelectRequest }) {
                                         padding: '4px 8px',
                                         borderRadius: '8px',
                                         fontSize: '0.7rem',
-                                        background: 'rgba(251, 191, 36, 0.1)',
-                                        border: '1px solid #fbbf24',
-                                        color: '#fbbf24',
+                                        background: 'rgba(248, 113, 113, 0.1)',
+                                        border: '1px solid #f87171',
+                                        color: '#f87171',
                                         textAlign: 'center'
                                     }}>
                                         <AlertCircle size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />

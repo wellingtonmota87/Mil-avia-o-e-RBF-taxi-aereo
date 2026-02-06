@@ -279,7 +279,7 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                             style={{
                                 padding: '24px 32px',
                                 borderRadius: '20px',
-                                borderLeft: `4px solid ${requester.status === 'active' ? '#34d399' : '#fbbf24'}`
+                                borderLeft: `4px solid ${requester.status === 'active' ? '#34d399' : '#f87171'}`
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -290,9 +290,9 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                                             padding: '4px 12px',
                                             borderRadius: '20px',
                                             fontSize: '0.7rem',
-                                            background: requester.status === 'active' ? 'rgba(52, 211, 153, 0.1)' : 'rgba(251, 191, 36, 0.1)',
-                                            color: requester.status === 'active' ? '#34d399' : '#fbbf24',
-                                            border: `1px solid ${requester.status === 'active' ? '#34d399' : '#fbbf24'}`,
+                                            background: requester.status === 'active' ? 'rgba(52, 211, 153, 0.1)' : 'rgba(248, 113, 113, 0.1)',
+                                            color: requester.status === 'active' ? '#34d399' : '#f87171',
+                                            border: `1px solid ${requester.status === 'active' ? '#34d399' : '#f87171'}`,
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '4px'
@@ -335,9 +335,9 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                                             onClick={() => handleResendInvite(requester)}
                                             className="premium-button"
                                             style={{
-                                                background: 'rgba(251, 191, 36, 0.1)',
-                                                border: '1px solid #fbbf24',
-                                                color: '#fbbf24',
+                                                background: 'rgba(248, 113, 113, 0.1)',
+                                                border: '1px solid #f87171',
+                                                color: '#f87171',
                                                 padding: '8px 16px',
                                                 fontSize: '0.85rem'
                                             }}
@@ -463,13 +463,13 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                             </div>
 
                             <div style={{
-                                background: 'rgba(251, 191, 36, 0.1)',
-                                border: '1px solid #fbbf24',
+                                background: 'rgba(248, 113, 113, 0.1)',
+                                border: '1px solid #f87171',
                                 borderRadius: '12px',
                                 padding: '16px',
                                 marginBottom: '24px'
                             }}>
-                                <p style={{ fontSize: '0.85rem', color: '#fbbf24', margin: 0 }}>
+                                <p style={{ fontSize: '0.85rem', color: '#f87171', margin: 0 }}>
                                     ℹ️ Desenvolvimento Local: Como este é um ambiente de desenvolvimento,
                                     compartilhe este link manualmente com o solicitante.
                                 </p>

@@ -93,25 +93,20 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
 
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '20px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
                 maxWidth: '1400px',
                 margin: '0 auto'
             }}>
                 {/* Calendário de Voo */}
                 <motion.div
-                    whileHover={{
-                        scale: 1.03,
-                        translateY: -10,
-                        borderColor: '#34d399',
-                        boxShadow: '0 0 30px rgba(52, 211, 153, 0.15)'
-                    }}
+                    whileHover={{ scale: 1.03, translateY: -10, borderColor: '#34d399', boxShadow: '0 0 30px rgba(52, 211, 153, 0.15)' }}
                     transition={{ type: 'spring', stiffness: 300 }}
                     onClick={() => onNavigate('flight-panel')}
                     className="glass-morphism"
                     style={{
-                        padding: '32px 24px',
-                        borderRadius: '32px',
+                        padding: '24px',
+                        borderRadius: '24px',
                         cursor: 'pointer',
                         textAlign: 'center',
                         border: '2px solid transparent',
@@ -121,20 +116,20 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '24px',
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '18px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        margin: '0 auto 24px',
+                        margin: '0 auto 16px',
                         color: '#000',
                         boxShadow: '0 8px 20px rgba(52, 211, 153, 0.2)'
                     }}>
-                        <ListChecks size={40} />
+                        <ListChecks size={32} />
                     </div>
-                    <h2 style={{ marginBottom: '16px', fontSize: '1.6rem' }}>Controle de Solicitação de Voo</h2>
-                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '1rem', lineHeight: '1.5' }}>
+                    <h2 style={{ marginBottom: '12px', fontSize: '1.3rem' }}>Controle de Voos</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '0.95rem', lineHeight: '1.5' }}>
                         Visualize e gerencie todas as solicitações de voo da frota em uma única tela completa.
                     </p>
                     {pendingCount > 0 && (
@@ -143,38 +138,31 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                             alignItems: 'center',
                             gap: '8px',
                             background: 'rgba(239, 68, 68, 0.2)',
-                            border: '2px solid #ef4444',
+                            border: '1px solid #ef4444',
                             color: '#fff',
-                            padding: '8px 20px',
-                            borderRadius: '24px',
-                            fontSize: '0.9rem',
-                            marginBottom: '20px',
-                            boxShadow: '0 0 15px rgba(239, 68, 68, 0.3)',
-                            animation: 'pulse-alert 2s infinite',
-                            letterSpacing: '0.5px'
+                            padding: '6px 16px',
+                            borderRadius: '20px',
+                            fontSize: '0.8rem',
+                            marginBottom: '16px',
+                            animation: 'pulse-alert 2s infinite'
                         }}>
-                            <Clock size={18} /> {pendingCount} {pendingCount === 1 ? 'NOVA SOLICITAÇÃO' : 'NOVAS SOLICITAÇÕES'}
+                            <Clock size={16} /> {pendingCount} {pendingCount === 1 ? 'PENDENTE' : 'PENDENTES'}
                         </div>
                     )}
-                    <div style={{ color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.05rem', marginTop: '16px' }}>
+                    <div style={{ color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 'bold' }}>
                         Acessar Painel <ArrowRight size={18} />
                     </div>
                 </motion.div>
 
                 {/* Voos por Cliente */}
                 <motion.div
-                    whileHover={{
-                        scale: 1.03,
-                        translateY: -10,
-                        borderColor: '#fbbf24',
-                        boxShadow: '0 0 30px rgba(251, 191, 36, 0.15)'
-                    }}
+                    whileHover={{ scale: 1.03, translateY: -10, borderColor: '#fbbf24', boxShadow: '0 0 30px rgba(251, 191, 36, 0.15)' }}
                     transition={{ type: 'spring', stiffness: 300 }}
                     onClick={() => onNavigate('by-client')}
                     className="glass-morphism"
                     style={{
-                        padding: '32px 24px',
-                        borderRadius: '32px',
+                        padding: '24px',
+                        borderRadius: '24px',
                         cursor: 'pointer',
                         textAlign: 'center',
                         border: '2px solid transparent',
@@ -184,21 +172,21 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '24px',
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '18px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        margin: '0 auto 24px',
+                        margin: '0 auto 16px',
                         color: '#000',
                         boxShadow: '0 8px 20px rgba(251, 191, 36, 0.2)'
                     }}>
-                        <Users size={40} />
+                        <Users size={32} />
                     </div>
-                    <h2 style={{ marginBottom: '16px', fontSize: '2rem' }}>Voos por Cliente</h2>
-                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '1rem', lineHeight: '1.5' }}>
-                        Filtre e visualize voos específicos de cada cliente cadastrado no sistema.
+                    <h2 style={{ marginBottom: '12px', fontSize: '1.3rem' }}>Voos por Cliente</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                        Visualize o histórico e as solicitações organizadas por cada contratante.
                     </p>
                     <div style={{
                         display: 'inline-flex',
@@ -207,33 +195,29 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                         background: 'rgba(251, 191, 36, 0.1)',
                         border: '1px solid rgba(251, 191, 36, 0.3)',
                         color: '#fbbf24',
-                        padding: '8px 16px',
+                        padding: '6px 16px',
                         borderRadius: '20px',
-                        fontSize: '0.85rem',
-                        fontWeight: 'bold',
-                        marginBottom: '20px'
+                        fontSize: '0.8rem',
+                        marginBottom: '16px',
+                        fontWeight: 'bold'
                     }}>
-                        {uniqueClients.length} {uniqueClients.length === 1 ? 'cliente' : 'clientes'}
+                        {uniqueClients.length} {uniqueClients.length === 1 ? 'CLIENTE' : 'CLIENTES'}
                     </div>
-                    <div style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.05rem', marginTop: '16px' }}>
+                    <div style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 'bold' }}>
                         Ver Clientes <ArrowRight size={18} />
                     </div>
                 </motion.div>
 
+
                 {/* Gerenciar Solicitantes */}
                 <motion.div
-                    whileHover={{
-                        scale: 1.03,
-                        translateY: -10,
-                        borderColor: '#a855f7',
-                        boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)'
-                    }}
+                    whileHover={{ scale: 1.03, translateY: -10, borderColor: '#a855f7', boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)' }}
                     transition={{ type: 'spring', stiffness: 300 }}
                     onClick={() => onNavigate('manage-requesters')}
                     className="glass-morphism"
                     style={{
-                        padding: '32px 24px',
-                        borderRadius: '32px',
+                        padding: '24px',
+                        borderRadius: '24px',
                         cursor: 'pointer',
                         textAlign: 'center',
                         border: '2px solid transparent',
@@ -243,21 +227,21 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '24px',
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '18px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        margin: '0 auto 24px',
+                        margin: '0 auto 16px',
                         color: '#fff',
                         boxShadow: '0 8px 20px rgba(168, 85, 247, 0.2)'
                     }}>
-                        <UserCog size={40} />
+                        <UserCog size={32} />
                     </div>
-                    <h2 style={{ marginBottom: '16px', fontSize: '2rem' }}>Gerenciar Solicitantes</h2>
-                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '1rem', lineHeight: '1.5' }}>
-                        Cadastre e gerencie quem pode fazer solicitações de voo no sistema.
+                    <h2 style={{ marginBottom: '12px', fontSize: '1.3rem' }}>Gerenciar Solicitantes</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                        Controle os usuários que podem solicitar voos no sistema.
                     </p>
                     <div style={{
                         display: 'inline-flex',
@@ -266,34 +250,28 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                         background: 'rgba(168, 85, 247, 0.1)',
                         border: '1px solid rgba(168, 85, 247, 0.3)',
                         color: '#a855f7',
-                        padding: '8px 16px',
+                        padding: '6px 16px',
                         borderRadius: '20px',
-                        fontSize: '0.85rem',
-                        fontWeight: 'bold',
-                        marginBottom: '20px'
+                        fontSize: '0.8rem',
+                        marginBottom: '16px',
+                        fontWeight: 'bold'
                     }}>
-                        {requestersData.total} {requestersData.total === 1 ? 'solicitante' : 'solicitantes'}
-                        {requestersData.pending > 0 && ` • ${requestersData.pending} ${requestersData.pending === 1 ? 'pendente' : 'pendentes'}`}
+                        {requestersData.total} {requestersData.total === 1 ? 'SOLICITANTE' : 'SOLICITANTES'}
                     </div>
-                    <div style={{ color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.05rem', marginTop: '16px' }}>
-                        Gerenciar <ArrowRight size={18} />
+                    <div style={{ color: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 'bold' }}>
+                        Gerenciar Usuários <ArrowRight size={18} />
                     </div>
                 </motion.div>
 
                 {/* Gerenciar Tripulação */}
                 <motion.div
-                    whileHover={{
-                        scale: 1.03,
-                        translateY: -10,
-                        borderColor: 'var(--primary)',
-                        boxShadow: '0 0 30px rgba(201, 168, 106, 0.15)'
-                    }}
+                    whileHover={{ scale: 1.03, translateY: -10, borderColor: 'var(--primary)', boxShadow: '0 0 30px rgba(201, 168, 106, 0.15)' }}
                     transition={{ type: 'spring', stiffness: 300 }}
                     onClick={() => onNavigate('manage-crew')}
                     className="glass-morphism"
                     style={{
-                        padding: '32px 24px',
-                        borderRadius: '32px',
+                        padding: '24px',
+                        borderRadius: '24px',
                         cursor: 'pointer',
                         textAlign: 'center',
                         border: '2px solid transparent',
@@ -303,21 +281,21 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #c9a86a 0%, #b08d4a 100%)',
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '24px',
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '18px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        margin: '0 auto 24px',
+                        margin: '0 auto 16px',
                         color: '#000',
                         boxShadow: '0 8px 20px rgba(201, 168, 106, 0.2)'
                     }}>
-                        <Fingerprint size={40} />
+                        <Fingerprint size={32} />
                     </div>
-                    <h2 style={{ marginBottom: '16px', fontSize: '2rem' }}>Gerenciar Tripulação</h2>
-                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '1rem', lineHeight: '1.5' }}>
-                        Cadastre e gerencie os tripulantes (Pilotos e Co-pilotos) da frota.
+                    <h2 style={{ marginBottom: '12px', fontSize: '1.3rem' }}>Gerenciar Tripulação</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '28px', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                        Cadastre pilotos e copilotos para atribuição de escalas.
                     </p>
                     <div style={{
                         display: 'inline-flex',
@@ -326,16 +304,16 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                         background: 'rgba(201, 168, 106, 0.1)',
                         border: '1px solid rgba(201, 168, 106, 0.3)',
                         color: 'var(--primary)',
-                        padding: '8px 16px',
+                        padding: '6px 16px',
                         borderRadius: '20px',
-                        fontSize: '0.85rem',
-                        fontWeight: 'bold',
-                        marginBottom: '20px'
+                        fontSize: '0.8rem',
+                        marginBottom: '16px',
+                        fontWeight: 'bold'
                     }}>
-                        {crewData.total} {crewData.total === 1 ? 'tripulante' : 'tripulantes'}
+                        {crewData.total} {crewData.total === 1 ? 'TRIPULANTE' : 'TRIPULANTES'}
                     </div>
-                    <div style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.05rem', marginTop: '16px' }}>
-                        Gerenciar <ArrowRight size={18} />
+                    <div style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1rem', fontWeight: 'bold' }}>
+                        Gerenciar Escala <ArrowRight size={18} />
                     </div>
                 </motion.div>
             </div>
@@ -366,6 +344,7 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                     <button
                         onClick={() => exportToJSON(requests)}
                         className="premium-button"
+                        title="Baixa um arquivo com todos os dados para servir de backup ou para sincronizar com o site oficial."
                         style={{
                             background: 'rgba(52, 211, 153, 0.1)',
                             border: '1px solid #34d399',
@@ -383,6 +362,7 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                         <input
                             type="file"
                             accept=".json"
+                            title="Carrega dados de um arquivo de backup (.json) para o sistema."
                             onChange={async (e) => {
                                 const file = e.target.files[0];
                                 if (file) {
@@ -410,6 +390,7 @@ export default function CoordinatorHome({ requests, onNavigate, onRequestsImport
                         />
                         <button
                             className="premium-button"
+                            title="Carrega dados de um arquivo de backup (.json) para o sistema."
                             style={{
                                 background: 'rgba(251, 191, 36, 0.1)',
                                 border: '1px solid #fbbf24',

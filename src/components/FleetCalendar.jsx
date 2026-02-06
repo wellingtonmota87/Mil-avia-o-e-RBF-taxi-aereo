@@ -164,9 +164,9 @@ export default function FleetCalendar({ requests = [], onBack }) {
     const getStatusInfo = (status) => {
         switch (status) {
             case 'aprovado': return { label: 'Confirmado', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' };
-            case 'novo': return { label: 'Em Análise', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' };
+            case 'novo': return { label: 'Em Análise', color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' };
             case 'alteracao_solicitada': return { label: 'Alteração do Voo', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)' };
-            case 'pendente': return { label: 'Pendência', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' };
+            case 'pendente': return { label: 'Pendência', color: '#f87171', bg: 'rgba(248, 113, 113, 0.1)' };
             default: return { label: status, color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' };
         }
     };

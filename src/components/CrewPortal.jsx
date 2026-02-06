@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate, formatDateTime } from '../utils/dateUtils';
+import { brazilianAirports } from '../data/airports';
 import {
     Navigation2,
     Plane,
@@ -15,13 +16,92 @@ import {
     Filter,
     LayoutDashboard,
     Fingerprint,
-    Info
+    Info,
+    Database,
+    BookOpen,
+    DollarSign,
+    ChevronDown,
+    Trash2,
+    FileText,
+    Upload,
+    Eye
 } from 'lucide-react';
 
-export default function CrewPortal({ requests = [] }) {
+export default function CrewPortal({ requests = [], onUpdateRequest }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFlight, setSelectedFlight] = useState(null);
     const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'upcoming', 'completed'
+    const [activeLancamentos, setActiveLancamentos] = useState(null);
+    const [showLogModal, setShowLogModal] = useState(false);
+    const [showExpensesModal, setShowExpensesModal] = useState(false);
+    const [selectedFlightForLog, setSelectedFlightForLog] = useState(null);
+    const [activeUploadContext, setActiveUploadContext] = useState(null); // 'log' or 'expense'
+    const [previewFile, setPreviewFile] = useState(null);
+    const fileInputRef = useRef(null);
+
+    const handleAddFile = async (e) => {
+        const file = e.target.files[0];
+        if (file && selectedFlightForLog && activeUploadContext) {
+            // Check file size (limit to 1MB for localStorage safety)
+            if (file.size > 1024 * 1024) {
+                alert('Arquivo muito grande! O limite para salvamento é de 1MB por arquivo.');
+                return;
+            }
+
+            const convertToBase64 = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+            };
+
+            try {
+                const base64 = await convertToBase64(file);
+                const newFile = {
+                    id: Date.now(),
+                    name: file.name,
+                    type: file.type,
+                    size: (file.size / 1024).toFixed(1) + ' KB',
+                    date: new Date().toLocaleString(),
+                    url: base64 // Guardamos o Base64 para persistência real
+                };
+
+                const currentRequest = requests.find(r => r.id === selectedFlightForLog.id);
+                if (currentRequest) {
+                    const field = activeUploadContext === 'log' ? 'crewLogs' : 'crewExpenses';
+                    const currentFiles = currentRequest[field] || [];
+
+                    onUpdateRequest(currentRequest.id, currentRequest.status, null, {
+                        ...currentRequest,
+                        [field]: [...currentFiles, newFile]
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao processar arquivo:', err);
+                alert('Erro ao processar o arquivo.');
+            }
+        }
+    };
+
+    const removeFile = (fileId, type = 'log') => {
+        const currentRequest = requests.find(r => r.id === selectedFlightForLog.id);
+        if (currentRequest) {
+            const field = type === 'log' ? 'crewLogs' : 'crewExpenses';
+            const currentFiles = currentRequest[field] || [];
+
+            onUpdateRequest(currentRequest.id, currentRequest.status, null, {
+                ...currentRequest,
+                [field]: currentFiles.filter(f => f.id !== fileId)
+            });
+        }
+    };
+
+    const getAirportLabel = (icao) => {
+        const ap = brazilianAirports.find(a => a.icao === icao || a.iata === icao);
+        return ap ? ap.label : icao;
+    };
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -182,195 +262,212 @@ export default function CrewPortal({ requests = [] }) {
                             }} />
 
                             {/* Header: Aircraft + Company + Timestamp */}
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                                marginBottom: '20px',
-                                paddingBottom: '16px',
-                                borderBottom: '1px solid rgba(255,255,255,0.05)'
-                            }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                        <h3 style={{
-                                            margin: 0,
-                                            fontSize: '1.3rem',
-                                            color: '#fff',
-                                            letterSpacing: '0.5px'
-                                        }}>
-                                            {req.aircraft?.name || 'N/A'} | CITATION CJ4
-                                        </h3>
-                                    </div>
-                                    <p style={{
-                                        margin: 0,
-                                        fontSize: '0.75rem',
-                                        color: 'var(--text-muted)',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '1px'
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px', flexWrap: 'wrap', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                {/* Aircraft and Requesting Company Header */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        background: 'rgba(255,255,255,0.03)',
+                                        padding: '12px 16px',
+                                        borderRadius: '12px',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        display: 'inline-block'
                                     }}>
-                                        {req.aircraft?.type || 'RBF TAXI AÉREO'}
-                                    </p>
-                                </div>
+                                        <div style={{ fontSize: '1.1rem', color: 'var(--primary)', letterSpacing: '0.5px', textTransform: 'uppercase', lineHeight: '1' }}>
+                                            {req.aircraft?.name || 'N/A'}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.7 }}>
+                                            {req.aircraft?.name?.includes('PT-RBZ') ? 'RBF TÁXI AÉREO' : 'MIL AVIAÇÃO'}
+                                        </div>
+                                    </div>
 
-                                <div style={{ textAlign: 'right' }}>
-                                    <h4 style={{
-                                        margin: '0 0 8px 0',
+                                    <div style={{
                                         fontSize: '1.1rem',
-                                        color: '#fff'
+                                        color: '#fff',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        opacity: 0.9,
+                                        borderLeft: '2px solid var(--primary)',
+                                        paddingLeft: '16px'
                                     }}>
                                         {req.name}
-                                    </h4>
-                                    <div style={{
-                                        display: 'inline-block',
-                                        padding: '6px 16px',
-                                        borderRadius: '100px',
-                                        background: status.bg,
-                                        color: status.color,
-                                        fontSize: '0.7rem',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px'
-                                    }}>
-                                        {status.label}
+                                    </div>
+                                </div>
+
+                                {/* Status Section */}
+                                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        {/* Dropdown Lançamentos */}
+                                        <div style={{ position: 'relative' }}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveLancamentos(activeLancamentos === req.id ? null : req.id);
+                                                }}
+                                                className="premium-button"
+                                                style={{
+                                                    padding: '10px 18px',
+                                                    fontSize: '0.75rem',
+                                                    background: activeLancamentos === req.id ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    color: activeLancamentos === req.id ? '#000' : '#fff',
+                                                    borderRadius: '10px',
+                                                    fontWeight: 'bold',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    height: '38px',
+                                                    transition: 'all 0.3s ease'
+                                                }}
+                                            >
+                                                <Database size={16} color={activeLancamentos === req.id ? '#000' : 'var(--primary)'} />
+                                                LANÇAMENTOS
+                                                <ChevronDown
+                                                    size={14}
+                                                    style={{
+                                                        transform: activeLancamentos === req.id ? 'rotate(180deg)' : 'rotate(0)',
+                                                        transition: 'transform 0.3s ease'
+                                                    }}
+                                                />
+                                            </button>
+
+                                            <AnimatePresence>
+                                                {activeLancamentos === req.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: '45px',
+                                                            right: 0,
+                                                            zIndex: 100,
+                                                            background: 'rgba(15, 15, 20, 0.95)',
+                                                            backdropFilter: 'blur(10px)',
+                                                            border: '1px solid var(--primary)',
+                                                            borderRadius: '12px',
+                                                            padding: '8px',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '4px',
+                                                            minWidth: '180px',
+                                                            boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                                                        }}
+                                                    >
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedFlightForLog(req);
+                                                                setShowLogModal(true);
+                                                                setActiveUploadContext('log');
+                                                                setActiveLancamentos(null);
+                                                            }}
+                                                            style={{
+                                                                padding: '10px 16px',
+                                                                fontSize: '0.8rem',
+                                                                background: 'transparent',
+                                                                border: 'none',
+                                                                color: '#fff',
+                                                                borderRadius: '8px',
+                                                                textAlign: 'left',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '10px',
+                                                                transition: 'background 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                                        >
+                                                            <BookOpen size={16} color="var(--primary)" /> Diário de Bordo
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedFlightForLog(req);
+                                                                setShowExpensesModal(true);
+                                                                setActiveUploadContext('expense');
+                                                                setActiveLancamentos(null);
+                                                            }}
+                                                            style={{
+                                                                padding: '10px 16px',
+                                                                fontSize: '0.8rem',
+                                                                background: 'transparent',
+                                                                border: 'none',
+                                                                color: '#fff',
+                                                                borderRadius: '8px',
+                                                                textAlign: 'left',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '10px',
+                                                                transition: 'background 0.2s'
+                                                            }}
+                                                            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                                        >
+                                                            <DollarSign size={16} color="#f87171" /> Lançar Gastos
+                                                        </button>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+
+                                        <div style={{
+                                            padding: '8px 20px',
+                                            borderRadius: '24px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '700',
+                                            background: status.bg,
+                                            color: status.color,
+                                            border: `2px solid ${status.color}`,
+                                            whiteSpace: 'nowrap',
+                                            letterSpacing: '1px',
+                                            boxShadow: `0 0 10px ${status.color}15`
+                                        }}>
+                                            {status.label.toUpperCase()}
+                                        </div>
+                                    </div>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.8, fontFamily: 'Arial, sans-serif', fontWeight: 'bold' }}>
+                                        {req.timestamp}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Flight Legs */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '8px' }}>
+                            {/* Bottom Section: Stages List - Full Width */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
                                 {req.legs.map((leg, legIdx) => (
                                     <div key={legIdx} style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '16px',
-                                        padding: '12px 0'
+                                        color: '#fff',
+                                        fontSize: '0.8rem',
+                                        fontFamily: 'Arial, sans-serif',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        padding: '8px 20px',
+                                        borderRadius: '8px',
+                                        gap: '12px'
                                     }}>
-                                        <div style={{
-                                            fontSize: '0.85rem',
-                                            color: 'var(--text-muted)',
-                                            fontWeight: '700',
-                                            minWidth: '80px'
-                                        }}>
-                                            {legIdx + 1}ª ETAPA
+                                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', width: '90px', flexShrink: 0 }}>{legIdx + 1}ª ETAPA</span>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', width: '330px', flexShrink: 0 }}>
+                                            <span style={{ color: 'var(--text-muted)', marginRight: '8px' }}>ORIGEM:</span>
+                                            <span style={{ color: '#fff' }}>{getAirportLabel(leg.origin)}</span>
                                         </div>
 
-                                        <div style={{
-                                            flex: 1,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '8px'
-                                        }}>
-                                            {/* Origem */}
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px'
-                                            }}>
-                                                <div style={{
-                                                    fontSize: '1.1rem',
-                                                    color: '#fff',
-                                                    minWidth: '100px'
-                                                }}>
-                                                    {leg.origin}
-                                                </div>
-
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>-</div>
-
-                                                <div style={{
-                                                    fontSize: '0.8rem',
-                                                    color: 'var(--text-muted)'
-                                                }}>
-                                                    {leg.originCity || leg.origin}
-                                                </div>
-                                            </div>
-
-                                            {/* Seta para baixo */}
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                                paddingLeft: '8px'
-                                            }}>
-                                                <ChevronRight
-                                                    size={16}
-                                                    style={{
-                                                        color: 'var(--primary)',
-                                                        transform: 'rotate(90deg)'
-                                                    }}
-                                                />
-                                            </div>
-
-                                            {/* Destino */}
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px'
-                                            }}>
-                                                <div style={{
-                                                    fontSize: '1.1rem',
-                                                    color: '#fff',
-                                                    minWidth: '100px'
-                                                }}>
-                                                    {leg.destination}
-                                                </div>
-
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>-</div>
-
-                                                <div style={{
-                                                    fontSize: '0.8rem',
-                                                    color: 'var(--text-muted)'
-                                                }}>
-                                                    {leg.destinationCity || leg.destination}
-                                                </div>
-                                            </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', width: '330px', flexShrink: 0 }}>
+                                            <span style={{ color: 'var(--text-muted)', marginRight: '8px' }}>DESTINO:</span>
+                                            <span style={{ color: '#fff' }}>{getAirportLabel(leg.destination)}</span>
                                         </div>
 
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '16px',
-                                            minWidth: '200px',
-                                            justifyContent: 'flex-end'
-                                        }}>
-                                            <div style={{
-                                                fontSize: '0.9rem',
-                                                color: '#fff',
-                                                fontWeight: '600'
-                                            }}>
-                                                {formatDateTime(leg.date, leg.time)}
-                                            </div>
+                                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', whiteSpace: 'nowrap' }}>
+                                            <span style={{ color: '#fff', opacity: 0.9 }}>{formatDateTime(leg.date, leg.time)}</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Timestamp and Arrow */}
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginTop: '16px',
-                                paddingTop: '16px',
-                                borderTop: '1px solid rgba(255,255,255,0.05)'
-                            }}>
-                                <div style={{
-                                    fontSize: '0.7rem',
-                                    color: 'var(--text-muted)'
-                                }}>
-                                    {req.timestamp}
-                                </div>
-
-                                <div style={{
-                                    background: 'rgba(201, 168, 106, 0.1)',
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: 'var(--primary)'
-                                }}>
-                                    <ChevronRight size={18} />
-                                </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                <ChevronRight size={20} color="var(--text-muted)" />
                             </div>
 
                             {/* Mission Today Badge */}
@@ -598,6 +695,476 @@ export default function CrewPortal({ requests = [] }) {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Modal de Diário de Bordo / Gerenciamento de Arquivos */}
+            <AnimatePresence>
+                {showLogModal && selectedFlightForLog && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 20000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px'
+                    }}>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowLogModal(false)}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0,0,0,0.85)',
+                                backdropFilter: 'blur(8px)'
+                            }}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            style={{
+                                background: 'rgba(15, 15, 20, 0.98)',
+                                border: '1px solid var(--primary)',
+                                borderRadius: '24px',
+                                width: '100%',
+                                maxWidth: '550px',
+                                position: 'relative',
+                                boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+                                padding: '32px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '24px'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <BookOpen color="var(--primary)" size={24} /> Diário de Bordo
+                                    </h3>
+                                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                        {selectedFlightForLog.aircraft?.name} - {selectedFlightForLog.name}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowLogModal(false)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            {/* Lista de Arquivos Salvos */}
+                            <div style={{
+                                minHeight: '150px',
+                                maxHeight: '300px',
+                                overflowY: 'auto',
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                padding: '16px'
+                            }}>
+                                {(!requests.find(r => r.id === selectedFlightForLog.id)?.crewLogs || requests.find(r => r.id === selectedFlightForLog.id).crewLogs.length === 0) ? (
+                                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5, gap: '12px' }}>
+                                        <BookOpen size={40} />
+                                        <span>Nenhum diário enviado.</span>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {requests.find(r => r.id === selectedFlightForLog.id).crewLogs.map(file => (
+                                            <div key={file.id} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                padding: '12px 16px',
+                                                borderRadius: '12px',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                cursor: 'pointer',
+                                                transition: 'transform 0.2s'
+                                            }}
+                                                onClick={() => setPreviewFile(file)}
+                                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(5px)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '8px',
+                                                        background: 'rgba(201, 168, 106, 0.1)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>
+                                                        {file.type.startsWith('image/') ? (
+                                                            <img src={file.url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} alt="" />
+                                                        ) : (
+                                                            <FileText size={20} color="var(--primary)" />
+                                                        )}
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '500' }}>{file.name}</span>
+                                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{file.date} • {file.size}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Eye size={18} color="var(--text-muted)" />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeFile(file.id, 'log');
+                                                        }}
+                                                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Botão de Enviar Arquivo */}
+                            <button
+                                onClick={() => {
+                                    setActiveUploadContext('log');
+                                    fileInputRef.current.click();
+                                }}
+                                className="premium-button"
+                                style={{
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                    padding: '16px',
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    background: 'var(--primary)',
+                                    color: '#000'
+                                }}
+                            >
+                                <Upload size={20} /> ENVIAR NOVO ARQUIVO
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Modal de Lançar Gastos / Gerenciamento de Recibos */}
+            <AnimatePresence>
+                {showExpensesModal && selectedFlightForLog && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 20000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '20px'
+                    }}>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowExpensesModal(false)}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0,0,0,0.85)',
+                                backdropFilter: 'blur(8px)'
+                            }}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            style={{
+                                background: 'rgba(15, 15, 20, 0.98)',
+                                border: '1px solid #f87171',
+                                borderRadius: '24px',
+                                width: '100%',
+                                maxWidth: '550px',
+                                position: 'relative',
+                                boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+                                padding: '32px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '24px'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <DollarSign color="#f87171" size={24} /> Lançar Gastos
+                                    </h3>
+                                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                        {selectedFlightForLog.aircraft?.name} - {selectedFlightForLog.name}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowExpensesModal(false)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            {/* Lista de Recibos Salvos */}
+                            <div style={{
+                                minHeight: '150px',
+                                maxHeight: '300px',
+                                overflowY: 'auto',
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                padding: '16px'
+                            }}>
+                                {(!requests.find(r => r.id === selectedFlightForLog.id)?.crewExpenses || requests.find(r => r.id === selectedFlightForLog.id).crewExpenses.length === 0) ? (
+                                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5, gap: '12px' }}>
+                                        <DollarSign size={40} />
+                                        <span>Nenhum comprovante enviado.</span>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {requests.find(r => r.id === selectedFlightForLog.id).crewExpenses.map(file => (
+                                            <div key={file.id} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                padding: '12px 16px',
+                                                borderRadius: '12px',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                cursor: 'pointer',
+                                                transition: 'transform 0.2s'
+                                            }}
+                                                onClick={() => setPreviewFile(file)}
+                                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateX(5px)'}
+                                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateX(0)'}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '8px',
+                                                        background: 'rgba(248, 113, 113, 0.1)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>
+                                                        {file.type.startsWith('image/') ? (
+                                                            <img src={file.url} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} alt="" />
+                                                        ) : (
+                                                            <FileText size={20} color="#f87171" />
+                                                        )}
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '500' }}>{file.name}</span>
+                                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{file.date} • {file.size}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Eye size={18} color="var(--text-muted)" />
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeFile(file.id, 'expense');
+                                                        }}
+                                                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Botão de Enviar Recibo */}
+                            <button
+                                onClick={() => {
+                                    setActiveUploadContext('expense');
+                                    fileInputRef.current.click();
+                                }}
+                                className="premium-button"
+                                style={{
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                    padding: '16px',
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    background: '#f87171',
+                                    color: '#fff',
+                                    border: 'none'
+                                }}
+                            >
+                                <Upload size={20} /> ENVIAR COMPROVANTE
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Modal de Preview de Arquivo */}
+            <AnimatePresence>
+                {previewFile && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 30000,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '40px'
+                    }}>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setPreviewFile(null)}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0,0,0,0.95)',
+                                backdropFilter: 'blur(10px)'
+                            }}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            style={{
+                                position: 'relative',
+                                maxWidth: '90vw',
+                                maxHeight: '90vh',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <button
+                                onClick={() => setPreviewFile(null)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '-40px',
+                                    right: 0,
+                                    background: 'none',
+                                    border: 'none',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                <X size={32} />
+                            </button>
+
+                            {previewFile.type.startsWith('image/') ? (
+                                <img
+                                    src={previewFile.url}
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '80vh',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 0 50px rgba(0,0,0,0.5)',
+                                        border: '1px solid rgba(255,255,255,0.1)'
+                                    }}
+                                    alt={previewFile.name}
+                                />
+                            ) : (previewFile.type === 'application/pdf' || previewFile.type.startsWith('text/')) ? (
+                                <div style={{ width: '85vw', height: '80vh', background: '#fff', borderRadius: '12px', overflow: 'hidden' }}>
+                                    <iframe
+                                        src={previewFile.url}
+                                        style={{ width: '100%', height: '100%', border: 'none' }}
+                                        title={previewFile.name}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{
+                                    background: 'rgba(15, 15, 20, 0.95)',
+                                    padding: '60px',
+                                    borderRadius: '24px',
+                                    border: '1px solid var(--primary)',
+                                    textAlign: 'center',
+                                    color: '#fff',
+                                    maxWidth: '400px'
+                                }}>
+                                    <FileText size={80} color="var(--primary)" style={{ marginBottom: '24px' }} />
+                                    <h3 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>{previewFile.name}</h3>
+                                    <p style={{ color: 'var(--text-muted)' }}>Este tipo de arquivo (Office/Outros) requer download para visualização.</p>
+                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px' }}>
+                                        <a
+                                            href={previewFile.url}
+                                            download={previewFile.name}
+                                            style={{
+                                                padding: '12px 24px',
+                                                background: 'var(--primary)',
+                                                color: '#000',
+                                                borderRadius: '8px',
+                                                fontWeight: 'bold',
+                                                textDecoration: 'none'
+                                            }}
+                                        >
+                                            BAIXAR AGORA
+                                        </a>
+                                        <button
+                                            onClick={() => setPreviewFile(null)}
+                                            style={{
+                                                padding: '12px 24px',
+                                                background: 'rgba(255,255,255,0.1)',
+                                                color: '#fff',
+                                                borderRadius: '8px',
+                                                fontWeight: 'bold',
+                                                border: 'none',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            FECHAR
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            <div style={{ marginTop: '20px', color: '#fff', fontSize: '1rem', fontWeight: 'bold' }}>
+                                {previewFile.name}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Input oculto para upload do Diário de Bordo */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleAddFile}
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+            />
         </div>
     );
 }

@@ -7,12 +7,13 @@ import CoordinatorHome from './CoordinatorHome'; // Importa tela inicial do coor
 import FlightsByClient from './FlightsByClient'; // Importa visualização de voos por cliente
 import ManageRequesters from './ManageRequesters'; // Importa gerenciamento de solicitantes
 import ManageCrew from './ManageCrew'; // Importa gerenciamento de tripulação
+import FinancialView from './FinancialView'; // Importa visualização financeira - NOVO
 import { Fingerprint as FingerprintIcon } from 'lucide-react'; // Importa ícone de impressão digital
 import { formatDate, getTimestamp, formatDateTime } from '../utils/dateUtils'; // Importa funções de data
 import { brazilianAirports } from '../data/airports'; // Importa lista de aeroportos brasileiros
 
 // Componente principal do painel do coordenador - gerencia autenticação, solicitações de voo e operações
-export default function CoordinatorDashboard({ requests = [], onUpdateStatus, onGeneratePack }) {
+export default function CoordinatorDashboard({ requests = [], onUpdateStatus, onGeneratePack, initialView = 'home' }) {
     const [isAuthorized, setIsAuthorized] = useState(false); // Controla se o coordenador está autenticado
     const [isRegistering, setIsRegistering] = useState(false); // Controla se está na tela de cadastro
     const [isPendingApproval, setIsPendingApproval] = useState(false); // Controla se está aguardando aprovação
@@ -32,7 +33,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
     const [manualFlightPendingData, setManualFlightPendingData] = useState(null); // Dados pendentes de voo manual
     const [showManualPendingModal, setShowManualPendingModal] = useState(false); // Controla modal de pendência de voo manual
     const [manualPendingReason, setManualPendingReason] = useState(''); // Razão da pendência de voo manual
-    const [currentView, setCurrentView] = useState('home'); // Visualização atual: 'home', 'flight-panel', 'by-client'
+    const [currentView, setCurrentView] = useState(initialView); // Visualização atual: 'home', 'flight-panel', 'by-client', 'financial'
     const [filterCanceled, setFilterCanceled] = useState(false); // Filtro para voos cancelados
     const [crewDatabase] = useState(() => { // Banco de dados de tripulação
         const stored = localStorage.getItem('crew_members');
@@ -292,7 +293,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         }
         switch (status) {
             case 'aprovado': return { label: 'Aprovado', color: '#34d399' };
-            case 'pendente': return { label: 'Pendência', color: '#fbbf24' };
+            case 'pendente': return { label: 'Pendência', color: '#f87171' };
             case 'concluido': return { label: 'Concluído', color: '#60a5fa' };
             case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#a855f7' };
             case 'recusado': return { label: 'Recusado', color: '#f87171' };
@@ -313,7 +314,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                 >
                     <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                         <div style={{
-                            background: isPendingApproval ? 'rgba(251, 191, 36, 0.1)' : 'rgba(52, 211, 153, 0.1)',
+                            background: isPendingApproval ? 'rgba(248, 113, 113, 0.1)' : 'rgba(52, 211, 153, 0.1)',
                             width: '80px',
                             height: '80px',
                             borderRadius: '24px',
@@ -321,7 +322,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                             alignItems: 'center',
                             justifyContent: 'center',
                             margin: '0 auto 24px',
-                            color: isPendingApproval ? '#fbbf24' : '#34d399'
+                            color: isPendingApproval ? '#f87171' : '#34d399'
                         }}>
                             {isPendingApproval ? <Clock size={40} /> : <ShieldAlert size={40} />}
                         </div>
@@ -649,7 +650,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                     </div>
 
                     {selectedRequest.observation && (
-                        <div style={{ marginBottom: '32px', padding: '20px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid #fbbf24', borderRadius: '16px', color: '#fbbf24' }}>
+                        <div style={{ marginBottom: '32px', padding: '20px', background: 'rgba(248, 113, 113, 0.1)', border: '1px solid #f87171', borderRadius: '16px', color: '#f87171' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
                                 <AlertCircle size={18} /> Observação da Pendência:
                             </div>
@@ -697,14 +698,14 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                 </>
                             ) : (
                                 <>
-                                    <p style={{ marginBottom: '8px', padding: isModified('name', selectedRequest.name) ? '4px 8px' : '0', background: isModified('name', selectedRequest.name) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                        <strong>Cliente:</strong> {selectedRequest.name} {isModified('name', selectedRequest.name) && <span style={{ fontSize: '0.7rem', color: '#fbbf24', marginLeft: '8px' }}>(ALTERADO)</span>}
+                                    <p style={{ marginBottom: '8px', padding: isModified('name', selectedRequest.name) ? '4px 8px' : '0', background: isModified('name', selectedRequest.name) ? 'rgba(248, 113, 113, 0.15)' : 'transparent', borderRadius: '4px' }}>
+                                        <strong>Cliente:</strong> {selectedRequest.name} {isModified('name', selectedRequest.name) && <span style={{ fontSize: '0.7rem', color: '#f87171', marginLeft: '8px' }}>(ALTERADO)</span>}
                                     </p>
-                                    <p style={{ marginBottom: '8px', padding: isModified('requestor', selectedRequest.requestor) ? '4px 8px' : '0', background: isModified('requestor', selectedRequest.requestor) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                        <strong>Solicitante:</strong> {selectedRequest.requestor || 'Não informado'} {isModified('requestor', selectedRequest.requestor) && <span style={{ fontSize: '0.7rem', color: '#fbbf24', marginLeft: '8px' }}>(ALTERADO)</span>}
+                                    <p style={{ marginBottom: '8px', padding: isModified('requestor', selectedRequest.requestor) ? '4px 8px' : '0', background: isModified('requestor', selectedRequest.requestor) ? 'rgba(248, 113, 113, 0.15)' : 'transparent', borderRadius: '4px' }}>
+                                        <strong>Solicitante:</strong> {selectedRequest.requestor || 'Não informado'} {isModified('requestor', selectedRequest.requestor) && <span style={{ fontSize: '0.7rem', color: '#f87171', marginLeft: '8px' }}>(ALTERADO)</span>}
                                     </p>
-                                    <p style={{ padding: isModified('email', selectedRequest.email) ? '4px 8px' : '0', background: isModified('email', selectedRequest.email) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                        <strong>E-mail:</strong> {selectedRequest.email} {isModified('email', selectedRequest.email) && <span style={{ fontSize: '0.7rem', color: '#fbbf24', marginLeft: '8px' }}>(ALTERADO)</span>}
+                                    <p style={{ padding: isModified('email', selectedRequest.email) ? '4px 8px' : '0', background: isModified('email', selectedRequest.email) ? 'rgba(248, 113, 113, 0.15)' : 'transparent', borderRadius: '4px' }}>
+                                        <strong>E-mail:</strong> {selectedRequest.email} {isModified('email', selectedRequest.email) && <span style={{ fontSize: '0.7rem', color: '#f87171', marginLeft: '8px' }}>(ALTERADO)</span>}
                                     </p>
                                 </>
                             )}
@@ -764,16 +765,16 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                                 <span style={{ background: 'var(--primary)', color: '#000', width: '24px', height: '24px', borderRadius: '50%', textAlign: 'center', fontSize: '0.8rem', lineHeight: '24px', fontWeight: 'bold' }}>{idx + 1}</span>
-                                <h4 style={{ margin: 0, padding: (isModified('date', leg.date, idx)) ? '4px 8px' : '0', background: (isModified('date', leg.date, idx)) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                    {idx + 1}ª ETAPA {isModified('date', leg.date, idx) && <span style={{ fontSize: '0.7rem', color: '#fbbf24', marginLeft: '8px' }}>(DATA ALTERADA)</span>}
+                                <h4 style={{ margin: 0, padding: (isModified('date', leg.date, idx)) ? '4px 8px' : '0', background: (isModified('date', leg.date, idx)) ? 'rgba(248, 113, 113, 0.15)' : 'transparent', borderRadius: '4px' }}>
+                                    {idx + 1}ª ETAPA {isModified('date', leg.date, idx) && <span style={{ fontSize: '0.7rem', color: '#f87171', marginLeft: '8px' }}>(DATA ALTERADA)</span>}
                                 </h4>
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
                                 <div>
                                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Data e Hora</p>
-                                    <p style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: (isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) ? '4px 8px' : '0', background: (isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) ? 'rgba(251, 191, 36, 0.15)' : 'transparent', borderRadius: '4px' }}>
-                                        <Calendar size={16} color="var(--primary)" /> {formatDate(leg.date)} às {leg.time} {(isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) && <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold' }}>(EDITADO)</span>}
+                                    <p style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: (isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) ? '4px 8px' : '0', background: (isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) ? 'rgba(248, 113, 113, 0.15)' : 'transparent', borderRadius: '4px' }}>
+                                        <Calendar size={16} color="var(--primary)" /> {formatDate(leg.date)} às {leg.time} {(isModified('date', leg.date, idx) || isModified('time', leg.time, idx)) && <span style={{ fontSize: '0.65rem', color: '#f87171', fontWeight: 'bold' }}>(EDITADO)</span>}
                                     </p>
                                 </div>
                                 <div>
@@ -791,7 +792,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                             alignItems: 'center',
                                             gap: '8px',
                                             padding: isModified('origin', leg.origin, idx) ? '4px 8px' : '0',
-                                            background: isModified('origin', leg.origin, idx) ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
+                                            background: isModified('origin', leg.origin, idx) ? 'rgba(248, 113, 113, 0.15)' : 'transparent',
                                             borderRadius: '4px',
                                             cursor: 'pointer',
                                             transition: 'color 0.2s'
@@ -800,7 +801,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         onMouseOut={(e) => e.currentTarget.style.color = 'inherit'}
                                         title="Ver no AISWEB"
                                     >
-                                        <MapPin size={16} color="var(--primary)" /> {leg.origin} {isModified('origin', leg.origin, idx) && <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold' }}>(EDITADO)</span>}
+                                        <MapPin size={16} color="var(--primary)" /> {leg.origin} {isModified('origin', leg.origin, idx) && <span style={{ fontSize: '0.65rem', color: '#f87171', fontWeight: 'bold' }}>(EDITADO)</span>}
                                     </p>
                                 </div>
                                 <div>
@@ -818,7 +819,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                             alignItems: 'center',
                                             gap: '8px',
                                             padding: isModified('destination', leg.destination, idx) ? '4px 8px' : '0',
-                                            background: isModified('destination', leg.destination, idx) ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
+                                            background: isModified('destination', leg.destination, idx) ? 'rgba(248, 113, 113, 0.15)' : 'transparent',
                                             borderRadius: '4px',
                                             cursor: 'pointer',
                                             transition: 'color 0.2s'
@@ -827,14 +828,14 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         onMouseOut={(e) => e.currentTarget.style.color = 'inherit'}
                                         title="Ver no AISWEB"
                                     >
-                                        <MapPin size={16} color="var(--primary)" /> {leg.destination} {isModified('destination', leg.destination, idx) && <span style={{ fontSize: '0.65rem', color: '#f97316', fontWeight: 'bold' }}>(EDITADO)</span>}
+                                        <MapPin size={16} color="var(--primary)" /> {leg.destination} {isModified('destination', leg.destination, idx) && <span style={{ fontSize: '0.65rem', color: '#f87171', fontWeight: 'bold' }}>(EDITADO)</span>}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setViewingDetails({ type: 'full', leg, idx })}
                                 className="premium-button"
-                                style={{ width: '100%', justifyContent: 'center', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)', fontSize: '0.9rem' }}
+                                style={{ width: '100%', justifyContent: 'center', background: 'rgba(248, 113, 113, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)', fontSize: '0.9rem' }}
                             >
                                 <FileText size={18} /> Detalhes do Voo
                             </button>
@@ -961,7 +962,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         setShowPendingModal(true);
                                     }}
                                     className="premium-button"
-                                    style={{ background: '#fbbf24', color: '#000', justifyContent: 'center' }}
+                                    style={{ background: '#f87171', color: '#fff', justifyContent: 'center' }}
                                 >
                                     <AlertCircle size={20} /> Agendado com Pendência
                                 </button>
@@ -1012,7 +1013,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                 }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', color: '#fbbf24' }}>
+                                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', color: '#f87171' }}>
                                         <AlertCircle /> Observação da Pendência
                                     </h3>
                                 </div>
@@ -1040,7 +1041,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <button
                                         className="premium-button"
-                                        style={{ background: '#fbbf24', color: '#000', justifyContent: 'center' }}
+                                        style={{ background: '#f87171', color: '#fff', justifyContent: 'center' }}
                                         onClick={() => handleAction('pendente', pendingReason)}
                                     >
                                         Gravar e Salvar
@@ -1247,7 +1248,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                                                             borderBottom: '1px solid rgba(255,255,255,0.05)',
                                                                                             fontSize: '0.85rem'
                                                                                         }}
-                                                                                        onMouseEnter={(e) => e.target.style.background = 'rgba(251, 191, 36, 0.1)'}
+                                                                                        onMouseEnter={(e) => e.target.style.background = 'rgba(248, 113, 113, 0.1)'}
                                                                                         onMouseLeave={(e) => e.target.style.background = 'transparent'}
                                                                                     >
                                                                                         {ap.label}
@@ -1299,7 +1300,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                                                             borderBottom: '1px solid rgba(255,255,255,0.05)',
                                                                                             fontSize: '0.85rem'
                                                                                         }}
-                                                                                        onMouseEnter={(e) => e.target.style.background = 'rgba(251, 191, 36, 0.1)'}
+                                                                                        onMouseEnter={(e) => e.target.style.background = 'rgba(248, 113, 113, 0.1)'}
                                                                                         onMouseLeave={(e) => e.target.style.background = 'transparent'}
                                                                                     >
                                                                                         {ap.label}
@@ -1321,319 +1322,307 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                                 <span style={{ color: '#fff' }}>{viewingDetails.leg.time}</span>
                                                             )}
                                                         </div>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                                                        {/* Plano de Voo Section */}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                                <span style={{ color: 'var(--text-muted)' }}>Plano de voo:</span>
-                                                                <div style={{ display: 'flex', gap: '6px' }}>
-                                                                    {['pendente', 'em_analise', 'aprovado'].map((status) => {
-                                                                        const isSelected = viewingDetails.leg.flightPlanStatus === status;
-                                                                        let bg = 'transparent';
+                                                                <span style={{ color: 'var(--text-muted)', minWidth: '100px' }}>Plano de voo:</span>
+                                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                                    {['PENDENTE', 'EM ANALISE', 'APROVADO'].map((status) => {
+                                                                        const currentStatus = (viewingDetails.leg.flightPlanStatus || 'PENDENTE').toUpperCase().replace('_', ' ');
+                                                                        const isSelected = currentStatus === status;
+
+                                                                        let bg = 'rgba(255,255,255,0.05)';
                                                                         let color = 'var(--text-muted)';
-                                                                        let border = 'var(--glass-border)';
+                                                                        let border = '1px solid rgba(255,255,255,0.1)';
 
                                                                         if (isSelected) {
-                                                                            if (status === 'pendente') {
+                                                                            if (status === 'PENDENTE') {
                                                                                 bg = '#ef4444'; // Red
                                                                                 color = '#fff';
-                                                                                border = '#ef4444';
-                                                                            } else if (status === 'aprovado') {
+                                                                                border = '1px solid #ef4444';
+                                                                            } else if (status === 'EM ANALISE') {
+                                                                                bg = '#eab308'; // Yellow
+                                                                                color = '#000';
+                                                                                border = '1px solid #eab308';
+                                                                            } else if (status === 'APROVADO') {
                                                                                 bg = '#22c55e'; // Green
                                                                                 color = '#fff';
-                                                                                border = '#22c55e';
-                                                                            } else { // em_analise
-                                                                                bg = 'var(--primary)';
-                                                                                color = '#000';
-                                                                                border = 'var(--primary)';
+                                                                                border = '1px solid #22c55e';
                                                                             }
                                                                         }
-
-                                                                        if (!isEditing && !isSelected) return null;
 
                                                                         return (
                                                                             <button
                                                                                 key={status}
-                                                                                onClick={() => isEditing && updateLeg('flightPlanStatus', status)}
+                                                                                onClick={() => updateLeg('flightPlanStatus', status.toLowerCase().replace(' ', '_'))}
                                                                                 style={{
-                                                                                    padding: '2px 8px',
-                                                                                    borderRadius: '4px',
-                                                                                    border: `1px solid ${border}`,
+                                                                                    padding: '4px 12px',
+                                                                                    borderRadius: '8px',
+                                                                                    border: border,
                                                                                     background: bg,
                                                                                     color: color,
-                                                                                    cursor: isEditing ? 'pointer' : 'default',
-                                                                                    fontSize: '0.7rem',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.75rem',
                                                                                     fontWeight: 'bold',
-                                                                                    textTransform: 'uppercase'
+                                                                                    textTransform: 'uppercase',
+                                                                                    transition: 'all 0.2s'
                                                                                 }}
                                                                             >
-                                                                                {status.replace('_', ' ')}
+                                                                                {status}
                                                                             </button>
                                                                         );
                                                                     })}
                                                                 </div>
                                                             </div>
                                                             {viewingDetails.leg.flightPlanStatus === 'aprovado' && (
-                                                                isEditing ? (
-                                                                    <input
-                                                                        type="text"
-                                                                        className="input-field"
-                                                                        style={{ padding: '4px 8px', height: '32px', width: '100%' }}
-                                                                        placeholder="Cole o link ou código do plano..."
-                                                                        value={viewingDetails.leg.flightPlan || ''}
-                                                                        onChange={(e) => updateLeg('flightPlan', e.target.value)}
-                                                                        autoFocus
-                                                                    />
-                                                                ) : (
-                                                                    <div style={{ color: '#fff', fontSize: '0.85rem', wordBreak: 'break-all' }}>
-                                                                        {viewingDetails.leg.flightPlan || 'Sem código informado'}
-                                                                    </div>
-                                                                )
+                                                                <input
+                                                                    type="text"
+                                                                    className="input-field"
+                                                                    style={{
+                                                                        background: 'rgba(255, 255, 255, 0.03)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                                        borderRadius: '8px',
+                                                                        padding: '12px 16px',
+                                                                        fontSize: '0.9rem',
+                                                                        color: '#fff',
+                                                                        width: '100%',
+                                                                        outline: 'none',
+                                                                        height: '42px'
+                                                                    }}
+                                                                    placeholder="Cole o link ou código do plano..."
+                                                                    value={viewingDetails.leg.flightPlan || ''}
+                                                                    onChange={(e) => updateLeg('flightPlan', e.target.value)}
+                                                                />
                                                             )}
                                                         </div>
 
-                                                        {(viewingDetails.leg.origin?.includes('SBSP') || viewingDetails.leg.destination?.includes('SBSP')) && (
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Slot Alocado:</span>
-                                                                    {isEditing ? (
-                                                                        <div style={{ display: 'flex', gap: '6px' }}>
-                                                                            <button
-                                                                                onClick={() => updateLeg('hasAllocatedSlot', true)}
-                                                                                style={{
-                                                                                    padding: '2px 10px',
-                                                                                    borderRadius: '4px',
-                                                                                    border: '1px solid ' + (viewingDetails.leg.hasAllocatedSlot !== false ? '#22c55e' : 'var(--glass-border)'),
-                                                                                    background: viewingDetails.leg.hasAllocatedSlot !== false ? '#22c55e' : 'transparent',
-                                                                                    color: viewingDetails.leg.hasAllocatedSlot !== false ? '#fff' : 'var(--text-muted)',
-                                                                                    cursor: 'pointer',
-                                                                                    fontSize: '0.65rem',
-                                                                                    fontWeight: 'bold'
-                                                                                }}
-                                                                            >
-                                                                                SIM
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    updateLeg({
-                                                                                        hasAllocatedSlot: false,
-                                                                                        allocatedSlot: '',
-                                                                                        allocatedSlotType: ''
-                                                                                    });
-                                                                                }}
-                                                                                style={{
-                                                                                    padding: '2px 10px',
-                                                                                    borderRadius: '4px',
-                                                                                    border: '1px solid ' + (viewingDetails.leg.hasAllocatedSlot === false ? '#ef4444' : 'var(--glass-border)'),
-                                                                                    background: viewingDetails.leg.hasAllocatedSlot === false ? '#ef4444' : 'transparent',
-                                                                                    color: viewingDetails.leg.hasAllocatedSlot === false ? '#fff' : 'var(--text-muted)',
-                                                                                    cursor: 'pointer',
-                                                                                    fontSize: '0.65rem',
-                                                                                    fontWeight: 'bold'
-                                                                                }}
-                                                                            >
-                                                                                NÃO
-                                                                            </button>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span style={{
-                                                                            color: viewingDetails.leg.hasAllocatedSlot !== false ? '#22c55e' : '#ef4444',
-                                                                            fontWeight: 'bold',
-                                                                            fontSize: '0.85rem'
-                                                                        }}>
-                                                                            {viewingDetails.leg.hasAllocatedSlot !== false ? 'SIM' : 'NÃO'}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-
-                                                                {viewingDetails.leg.hasAllocatedSlot !== false && (
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                                                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Tipo:</span>
-                                                                            {isEditing ? (
-                                                                                <div style={{ display: 'flex', gap: '6px' }}>
-                                                                                    <button
-                                                                                        onClick={() => updateLeg('allocatedSlotType', 'PRINCIPAL')}
-                                                                                        style={{
-                                                                                            padding: '2px 8px',
-                                                                                            borderRadius: '4px',
-                                                                                            border: '1px solid ' + (viewingDetails.leg.allocatedSlotType === 'PRINCIPAL' ? 'var(--primary)' : 'var(--glass-border)'),
-                                                                                            background: viewingDetails.leg.allocatedSlotType === 'PRINCIPAL' ? 'var(--primary)' : 'transparent',
-                                                                                            color: viewingDetails.leg.allocatedSlotType === 'PRINCIPAL' ? '#000' : 'var(--text-muted)',
-                                                                                            cursor: 'pointer',
-                                                                                            fontSize: '0.6rem',
-                                                                                            fontWeight: 'bold'
-                                                                                        }}
-                                                                                    >
-                                                                                        PRINCIPAL
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() => updateLeg('allocatedSlotType', 'AUXILIAR')}
-                                                                                        style={{
-                                                                                            padding: '2px 8px',
-                                                                                            borderRadius: '4px',
-                                                                                            border: '1px solid ' + (viewingDetails.leg.allocatedSlotType === 'AUXILIAR' ? 'var(--primary)' : 'var(--glass-border)'),
-                                                                                            background: viewingDetails.leg.allocatedSlotType === 'AUXILIAR' ? 'var(--primary)' : 'transparent',
-                                                                                            color: viewingDetails.leg.allocatedSlotType === 'AUXILIAR' ? '#000' : 'var(--text-muted)',
-                                                                                            cursor: 'pointer',
-                                                                                            fontSize: '0.6rem',
-                                                                                            fontWeight: 'bold'
-                                                                                        }}
-                                                                                    >
-                                                                                        AUXILIAR
-                                                                                    </button>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.8rem' }}>
-                                                                                    {viewingDetails.leg.allocatedSlotType || 'NÃO DEFINIDO'}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                        {isEditing ? (
-                                                                            <input
-                                                                                type="text"
-                                                                                className="input-field"
-                                                                                style={{ padding: '4px 8px', height: '30px', width: '100%', fontSize: '0.8rem' }}
-                                                                                placeholder="Identificação do slot..."
-                                                                                value={viewingDetails.leg.allocatedSlot || ''}
-                                                                                onChange={(e) => updateLeg('allocatedSlot', e.target.value)}
-                                                                            />
-                                                                        ) : (
-                                                                            <span style={{ color: '#fff', fontSize: '0.85rem' }}>{viewingDetails.leg.allocatedSlot || 'Sem identificação'}</span>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255, 193, 7, 0.1)', paddingTop: '12px' }}>
-                                                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
-                                                                <span style={{ color: 'var(--text-muted)' }}>Notam:</span>
-                                                                {isEditing ? (
+                                                        {/* Slot Alocado Section */}
+                                                        {(viewingDetails.leg.origin === 'SBSP - SÃO PAULO/SP' || viewingDetails.leg.origin === 'SBSP - CONGONHAS/SP' || viewingDetails.leg.destination === 'SBSP - SÃO PAULO/SP' || viewingDetails.leg.destination === 'SBSP - CONGONHAS/SP') && (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                    <span style={{ color: 'var(--text-muted)', minWidth: '100px' }}>Slot Alocado:</span>
                                                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                if (!viewingDetails.leg.hasNotam) {
-                                                                                    addNotamField();
-                                                                                }
-                                                                                updateLeg({ hasNotam: true, notamStatus: 'sim' });
-                                                                            }}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + (viewingDetails.leg.notamStatus === 'sim' ? 'var(--primary)' : 'var(--glass-border)'),
-                                                                                background: viewingDetails.leg.notamStatus === 'sim' ? 'var(--primary)' : 'transparent',
-                                                                                color: viewingDetails.leg.notamStatus === 'sim' ? '#000' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold'
-                                                                            }}
-                                                                        >
-                                                                            SIM
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                updateLeg({
-                                                                                    hasNotam: false,
-                                                                                    notamStatus: 'nao',
-                                                                                    notamData: [],
-                                                                                    notam: 'NENHUM NOTAM QUE IMPACTE NA OPERAÇÃO'
-                                                                                });
-                                                                            }}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + (viewingDetails.leg.notamStatus === 'nao' ? 'var(--text-muted)' : 'var(--glass-border)'),
-                                                                                background: viewingDetails.leg.notamStatus === 'nao' ? 'var(--text-muted)' : 'transparent',
-                                                                                color: viewingDetails.leg.notamStatus === 'nao' ? '#000' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold'
-                                                                            }}
-                                                                        >
-                                                                            NÃO
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => updateLeg({ notamStatus: 'pendente', hasNotam: true })}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + ((viewingDetails.leg.notamStatus === 'pendente' || !viewingDetails.leg.notamStatus) ? '#ef4444' : 'var(--glass-border)'),
-                                                                                background: (viewingDetails.leg.notamStatus === 'pendente' || !viewingDetails.leg.notamStatus) ? '#ef4444' : 'transparent',
-                                                                                color: (viewingDetails.leg.notamStatus === 'pendente' || !viewingDetails.leg.notamStatus) ? '#fff' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold'
-                                                                            }}
-                                                                        >
-                                                                            PENDENTE
-                                                                        </button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span style={{
-                                                                        color: viewingDetails.leg.notamStatus === 'sim' ? 'var(--primary)' :
-                                                                            viewingDetails.leg.notamStatus === 'nao' ? 'var(--text-muted)' : '#ef4444',
-                                                                        fontWeight: 'bold',
-                                                                        fontSize: '0.85rem',
-                                                                        textTransform: 'uppercase'
-                                                                    }}>
-                                                                        {viewingDetails.leg.notamStatus || 'PENDENTE'}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                                                        {['SIM', 'NÃO'].map((status) => {
+                                                                            const isSim = viewingDetails.leg.hasAllocatedSlot === true;
+                                                                            const isNao = viewingDetails.leg.hasAllocatedSlot === false;
+                                                                            const isSelected = (status === 'SIM' && isSim) || (status === 'NÃO' && isNao);
 
-                                                        {viewingDetails.leg.hasNotam === false && (
-                                                            <div style={{ paddingLeft: '12px', marginTop: '12px' }}>
-                                                                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>NENHUM NOTAM QUE IMPACTE NA OPERAÇÃO</p>
+                                                                            let bg = 'rgba(255,255,255,0.05)';
+                                                                            let color = 'var(--text-muted)';
+                                                                            let border = '1px solid rgba(255,255,255,0.1)';
+
+                                                                            if (isSelected) {
+                                                                                if (status === 'SIM') {
+                                                                                    bg = '#22c55e'; // Green
+                                                                                    color = '#fff';
+                                                                                    border = '1px solid #22c55e';
+                                                                                } else {
+                                                                                    bg = '#ef4444'; // Red
+                                                                                    color = '#fff';
+                                                                                    border = '1px solid #ef4444';
+                                                                                }
+                                                                            }
+
+                                                                            return (
+                                                                                <button
+                                                                                    key={status}
+                                                                                    onClick={() => updateLeg('hasAllocatedSlot', status === 'SIM')}
+                                                                                    style={{
+                                                                                        padding: '4px 12px',
+                                                                                        borderRadius: '8px',
+                                                                                        border: border,
+                                                                                        background: bg,
+                                                                                        color: color,
+                                                                                        cursor: 'pointer',
+                                                                                        fontSize: '0.75rem',
+                                                                                        fontWeight: 'bold',
+                                                                                        transition: 'all 0.2s'
+                                                                                    }}
+                                                                                >
+                                                                                    {status}
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                                {viewingDetails.leg.hasAllocatedSlot === true && (
+                                                                    <div style={{
+                                                                        background: 'rgba(255, 255, 255, 0.02)',
+                                                                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                                                                        borderRadius: '12px',
+                                                                        padding: '12px',
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        gap: '12px'
+                                                                    }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>TIPO:</span>
+                                                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                                                {['PRINCIPAL', 'AUXILIAR'].map((type) => {
+                                                                                    const isSelected = (viewingDetails.leg.slotType || 'PRINCIPAL').toUpperCase() === type;
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={type}
+                                                                                            onClick={() => updateLeg('slotType', type.toLowerCase())}
+                                                                                            style={{
+                                                                                                padding: '2px 10px',
+                                                                                                borderRadius: '6px',
+                                                                                                border: isSelected ? '1px solid #eab308' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                                                                background: isSelected ? 'rgba(234, 179, 8, 0.2)' : 'transparent',
+                                                                                                color: isSelected ? '#eab308' : 'var(--text-muted)',
+                                                                                                fontSize: '0.65rem',
+                                                                                                fontWeight: 'bold',
+                                                                                                cursor: 'pointer'
+                                                                                            }}
+                                                                                        >
+                                                                                            {type}
+                                                                                        </button>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        </div>
+                                                                        <input
+                                                                            type="text"
+                                                                            className="input-field"
+                                                                            placeholder="Identificação do slot..."
+                                                                            value={viewingDetails.leg.slotIdentifier || ''}
+                                                                            onChange={(e) => updateLeg('slotIdentifier', e.target.value)}
+                                                                            style={{
+                                                                                background: 'rgba(255, 255, 255, 0.03)',
+                                                                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                                                borderRadius: '8px',
+                                                                                padding: '8px 12px',
+                                                                                fontSize: '0.85rem',
+                                                                                color: '#fff',
+                                                                                outline: 'none'
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
 
-                                                        {viewingDetails.leg.hasNotam && viewingDetails.leg.notamStatus !== 'pendente' && (
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '12px', marginTop: '12px' }}>
-                                                                {(Array.isArray(viewingDetails.leg.notamData) ? viewingDetails.leg.notamData : []).map((ntm, nIdx) => (
-                                                                    <div key={nIdx} style={{ display: 'grid', gridTemplateColumns: '30px 1fr', gap: '8px', alignItems: 'center' }}>
-                                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{nIdx + 1}.</span>
-                                                                        {isEditing ? (
-                                                                            <input
-                                                                                type="text"
+                                                        <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '20px 0' }} />
+
+                                                        {/* Notam Section */}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                <span style={{ color: 'var(--text-muted)', minWidth: '100px' }}>Notam:</span>
+                                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                                    {['SIM', 'NÃO', 'PENDENTE'].map((status) => {
+                                                                        const currentStatus = (viewingDetails.leg.notamStatus || 'PENDENTE').toUpperCase();
+                                                                        const isSelected = currentStatus === status;
+
+                                                                        let bg = 'rgba(255,255,255,0.05)';
+                                                                        let color = 'var(--text-muted)';
+                                                                        let border = '1px solid rgba(255,255,255,0.1)';
+
+                                                                        if (isSelected) {
+                                                                            if (status === 'SIM') {
+                                                                                bg = '#eab308'; // Yellowish
+                                                                                color = '#000';
+                                                                                border = '1px solid #eab308';
+                                                                            } else if (status === 'NÃO') {
+                                                                                bg = '#22c55e'; // Green
+                                                                                color = '#fff';
+                                                                                border = '1px solid #22c55e';
+                                                                            } else if (status === 'PENDENTE') {
+                                                                                bg = '#ef4444'; // Red
+                                                                                color = '#fff';
+                                                                                border = '1px solid #ef4444';
+                                                                            }
+                                                                        }
+
+                                                                        return (
+                                                                            <button
+                                                                                key={status}
+                                                                                onClick={() => updateLeg('notamStatus', status.toLowerCase())}
+                                                                                style={{
+                                                                                    padding: '4px 12px',
+                                                                                    borderRadius: '8px',
+                                                                                    border: border,
+                                                                                    background: bg,
+                                                                                    color: color,
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 'bold',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}
+                                                                            >
+                                                                                {status}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+
+                                                            {viewingDetails.leg.notamStatus === 'sim' && (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+                                                                    {(viewingDetails.leg.notams || (viewingDetails.leg.notam ? [viewingDetails.leg.notam] : [''])).map((ntm, i) => (
+                                                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', width: '20px' }}>{i + 1}.</span>
+                                                                            <textarea
                                                                                 className="input-field"
-                                                                                style={{ padding: '4px 8px', height: '32px' }}
-                                                                                placeholder="Descreva o NOTAM..."
+                                                                                placeholder="Informe o NOTAM..."
                                                                                 value={ntm}
-                                                                                onChange={(e) => updateNotam(nIdx, e.target.value)}
+                                                                                onChange={(e) => {
+                                                                                    const currentNotams = viewingDetails.leg.notams || (viewingDetails.leg.notam ? [viewingDetails.leg.notam] : ['']);
+                                                                                    const newNotams = [...currentNotams];
+                                                                                    newNotams[i] = e.target.value;
+                                                                                    updateLeg('notams', newNotams);
+                                                                                }}
+                                                                                style={{
+                                                                                    background: 'rgba(255, 255, 255, 0.03)',
+                                                                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                                                    borderRadius: '12px',
+                                                                                    padding: '10px 16px',
+                                                                                    fontSize: '0.9rem',
+                                                                                    color: '#fff',
+                                                                                    flex: 1,
+                                                                                    outline: 'none',
+                                                                                    minHeight: '60px',
+                                                                                    resize: 'none'
+                                                                                }}
                                                                             />
-                                                                        ) : (
-                                                                            <span style={{ color: '#fff', fontSize: '0.85rem' }}>{ntm}</span>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                                {isEditing && (
-                                                                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                                                                        </div>
+                                                                    ))}
+                                                                    <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
                                                                         <button
-                                                                            onClick={addNotamField}
+                                                                            onClick={() => {
+                                                                                const currentNotams = viewingDetails.leg.notams || (viewingDetails.leg.notam ? [viewingDetails.leg.notam] : ['']);
+                                                                                const newNotams = [...currentNotams, ''];
+                                                                                updateLeg('notams', newNotams);
+                                                                            }}
                                                                             style={{
-                                                                                alignSelf: 'flex-start',
-                                                                                background: 'none',
-                                                                                border: '1px dashed var(--glass-border)',
+                                                                                padding: '6px 12px',
+                                                                                borderRadius: '6px',
+                                                                                border: '1px dashed rgba(255,255,255,0.2)',
+                                                                                background: 'transparent',
                                                                                 color: 'var(--text-muted)',
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
                                                                                 fontSize: '0.7rem',
+                                                                                fontWeight: 'bold',
                                                                                 cursor: 'pointer'
                                                                             }}
                                                                         >
                                                                             + ADICIONAR NOTAM
                                                                         </button>
-                                                                        {Array.isArray(viewingDetails.leg.notamData) && viewingDetails.leg.notamData.length > 0 && (
+                                                                        {((viewingDetails.leg.notams && viewingDetails.leg.notams.length > 0) || viewingDetails.leg.notam) && (
                                                                             <button
-                                                                                onClick={() => removeNotamField((viewingDetails.leg.notamData || []).length - 1)}
+                                                                                onClick={() => {
+                                                                                    const currentNotams = viewingDetails.leg.notams || (viewingDetails.leg.notam ? [viewingDetails.leg.notam] : ['']);
+                                                                                    const newNotams = [...currentNotams];
+                                                                                    newNotams.pop();
+                                                                                    updateLeg('notams', newNotams);
+                                                                                }}
                                                                                 style={{
-                                                                                    alignSelf: 'flex-start',
-                                                                                    background: 'rgba(248, 113, 113, 0.1)',
-                                                                                    border: '1px solid rgba(248, 113, 113, 0.2)',
+                                                                                    padding: '6px 12px',
+                                                                                    borderRadius: '6px',
+                                                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                                    background: 'rgba(239, 68, 68, 0.1)',
                                                                                     color: '#f87171',
-                                                                                    padding: '4px 12px',
-                                                                                    borderRadius: '4px',
                                                                                     fontSize: '0.7rem',
+                                                                                    fontWeight: 'bold',
                                                                                     cursor: 'pointer'
                                                                                 }}
                                                                             >
@@ -1641,14 +1630,9 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                                             </button>
                                                                         )}
                                                                     </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                        {isEditing ? (
-                                                            <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.notamSign || ''} onChange={(e) => updateLeg('notamSign', e.target.value)} />
-                                                        ) : (
-                                                            viewingDetails.leg.notamSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.notamSign}*</span>
-                                                        )}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -1833,47 +1817,49 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                         )}
                                                     </div>
 
-                                                    {viewingDetails.leg.isStandardCatering ? (
-                                                        <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
-                                                            <span style={{ color: 'var(--primary)', fontWeight: 'bold', letterSpacing: '2px' }}>PADRAO</span>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', marginBottom: '12px' }}>
-                                                                <span style={{ color: 'var(--text-muted)' }}>ESTABELECIMENTO:</span>
+                                                    {
+                                                        viewingDetails.leg.isStandardCatering ? (
+                                                            <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
+                                                                <span style={{ color: 'var(--primary)', fontWeight: 'bold', letterSpacing: '2px' }}>PADRAO</span>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', marginBottom: '12px' }}>
+                                                                    <span style={{ color: 'var(--text-muted)' }}>ESTABELECIMENTO:</span>
+                                                                    {isEditing ? (
+                                                                        <input
+                                                                            type="text"
+                                                                            className="input-field"
+                                                                            style={{ padding: '4px 8px', height: '32px', fontSize: '0.8rem' }}
+                                                                            placeholder="CATERING"
+                                                                            value={viewingDetails.leg.cateringEstablishment || ''}
+                                                                            onChange={(e) => updateLeg('cateringEstablishment', e.target.value)}
+                                                                        />
+                                                                    ) : (
+                                                                        <span style={{ color: '#fff' }}>{viewingDetails.leg.cateringEstablishment || 'Não informado'}</span>
+                                                                    )}
+                                                                </div>
                                                                 {isEditing ? (
-                                                                    <input
-                                                                        type="text"
+                                                                    <textarea
                                                                         className="input-field"
-                                                                        style={{ padding: '4px 8px', height: '32px', fontSize: '0.8rem' }}
-                                                                        placeholder="CATERING"
-                                                                        value={viewingDetails.leg.cateringEstablishment || ''}
-                                                                        onChange={(e) => updateLeg('cateringEstablishment', e.target.value)}
+                                                                        style={{ minHeight: '80px', width: '100%', padding: '12px' }}
+                                                                        placeholder="Detalhes do catering..."
+                                                                        value={viewingDetails.leg.catering || ''}
+                                                                        onChange={(e) => updateLeg('catering', e.target.value)}
                                                                     />
                                                                 ) : (
-                                                                    <span style={{ color: '#fff' }}>{viewingDetails.leg.cateringEstablishment || 'Não informado'}</span>
+                                                                    <div style={{ color: '#fff', fontSize: '0.9rem', whiteSpace: 'pre-wrap', padding: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                                                                        {viewingDetails.leg.catering || 'Sem detalhes informados'}
+                                                                    </div>
                                                                 )}
-                                                            </div>
-                                                            {isEditing ? (
-                                                                <textarea
-                                                                    className="input-field"
-                                                                    style={{ minHeight: '80px', width: '100%', padding: '12px' }}
-                                                                    placeholder="Detalhes do catering..."
-                                                                    value={viewingDetails.leg.catering || ''}
-                                                                    onChange={(e) => updateLeg('catering', e.target.value)}
-                                                                />
-                                                            ) : (
-                                                                <div style={{ color: '#fff', fontSize: '0.9rem', whiteSpace: 'pre-wrap', padding: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                                                                    {viewingDetails.leg.catering || 'Sem detalhes informados'}
-                                                                </div>
-                                                            )}
-                                                            {isEditing ? (
-                                                                <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.cateringSign || ''} onChange={(e) => updateLeg('cateringSign', e.target.value)} />
-                                                            ) : (
-                                                                viewingDetails.leg.cateringSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.cateringSign}*</span>
-                                                            )}
-                                                        </>
-                                                    )}
+                                                                {isEditing ? (
+                                                                    <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.cateringSign || ''} onChange={(e) => updateLeg('cateringSign', e.target.value)} />
+                                                                ) : (
+                                                                    viewingDetails.leg.cateringSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.cateringSign}*</span>
+                                                                )}
+                                                            </>
+                                                        )
+                                                    }
                                                 </div>
 
                                                 {/* Hotel Section */}
@@ -1927,101 +1913,103 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                         )}
                                                     </div>
 
-                                                    {viewingDetails.leg.hasHotel === false ? (
-                                                        <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
-                                                            <span style={{ color: 'var(--text-muted)', fontWeight: 'bold', letterSpacing: '2px' }}>NÃO</span>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '4px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', width: 'fit-content' }}>
-                                                                {isEditing ? (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => updateLeg('hotelStatus', 'pendente')}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + ((viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#ef4444' : 'transparent'),
-                                                                                background: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#ef4444' : 'transparent',
-                                                                                color: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#fff' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold',
-                                                                                transition: 'all 0.2s'
-                                                                            }}
-                                                                        >
-                                                                            PENDENTE
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => updateLeg('hotelStatus', 'reservado')}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + (viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : 'transparent'),
-                                                                                background: viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : 'transparent',
-                                                                                color: viewingDetails.leg.hotelStatus === 'reservado' ? '#fff' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold',
-                                                                                transition: 'all 0.2s'
-                                                                            }}
-                                                                        >
-                                                                            RESERVADO
-                                                                        </button>
-                                                                    </>
-                                                                ) : (
-                                                                    <div style={{
-                                                                        padding: '4px 12px',
-                                                                        borderRadius: '4px',
-                                                                        background: viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : '#ef4444',
-                                                                        color: '#fff',
-                                                                        fontSize: '0.75rem',
-                                                                        fontWeight: 'bold'
-                                                                    }}>
-                                                                        {(viewingDetails.leg.hotelStatus || 'PENDENTE').toUpperCase()}
-                                                                    </div>
-                                                                )}
+                                                    {
+                                                        viewingDetails.leg.hasHotel === false ? (
+                                                            <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
+                                                                <span style={{ color: 'var(--text-muted)', fontWeight: 'bold', letterSpacing: '2px' }}>NÃO</span>
                                                             </div>
-
-                                                            {viewingDetails.leg.hotelStatus === 'reservado' && (
-                                                                <>
-                                                                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', marginBottom: '12px' }}>
-                                                                        <span style={{ color: 'var(--text-muted)' }}>NOME DO HOTEL:</span>
-                                                                        {isEditing ? (
-                                                                            <input
-                                                                                type="text"
-                                                                                className="input-field"
-                                                                                style={{ padding: '4px 8px', height: '32px' }}
-                                                                                placeholder="Nome do estabelecimento"
-                                                                                value={viewingDetails.leg.hotelName || ''}
-                                                                                onChange={(e) => updateLeg('hotelName', e.target.value)}
-                                                                            />
-                                                                        ) : (
-                                                                            <span style={{ color: '#fff' }}>{viewingDetails.leg.hotelName || 'Não informado'}</span>
-                                                                        )}
-                                                                    </div>
+                                                        ) : (
+                                                            <>
+                                                                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '4px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', width: 'fit-content' }}>
                                                                     {isEditing ? (
-                                                                        <textarea
-                                                                            className="input-field"
-                                                                            style={{ minHeight: '80px', width: '100%', padding: '12px' }}
-                                                                            placeholder="Informações de reserva e hotel..."
-                                                                            value={viewingDetails.leg.hotelDetails || ''}
-                                                                            onChange={(e) => updateLeg('hotelDetails', e.target.value)}
-                                                                        />
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => updateLeg('hotelStatus', 'pendente')}
+                                                                                style={{
+                                                                                    padding: '4px 12px',
+                                                                                    borderRadius: '4px',
+                                                                                    border: '1px solid ' + ((viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#f87171' : 'transparent'),
+                                                                                    background: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#f87171' : 'transparent',
+                                                                                    color: (viewingDetails.leg.hotelStatus === 'pendente' || !viewingDetails.leg.hotelStatus) ? '#fff' : 'var(--text-muted)',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 'bold',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}
+                                                                            >
+                                                                                PENDENTE
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => updateLeg('hotelStatus', 'reservado')}
+                                                                                style={{
+                                                                                    padding: '4px 12px',
+                                                                                    borderRadius: '4px',
+                                                                                    border: '1px solid ' + (viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : 'transparent'),
+                                                                                    background: viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : 'transparent',
+                                                                                    color: viewingDetails.leg.hotelStatus === 'reservado' ? '#fff' : 'var(--text-muted)',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 'bold',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}
+                                                                            >
+                                                                                RESERVADO
+                                                                            </button>
+                                                                        </>
                                                                     ) : (
-                                                                        <div style={{ color: '#fff', fontSize: '0.9rem', whiteSpace: 'pre-wrap', padding: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                                                                            {viewingDetails.leg.hotelDetails || 'Sem detalhes informados'}
+                                                                        <div style={{
+                                                                            padding: '4px 12px',
+                                                                            borderRadius: '4px',
+                                                                            background: viewingDetails.leg.hotelStatus === 'reservado' ? '#22c55e' : '#f87171',
+                                                                            color: '#fff',
+                                                                            fontSize: '0.75rem',
+                                                                            fontWeight: 'bold'
+                                                                        }}>
+                                                                            {(viewingDetails.leg.hotelStatus || 'PENDENTE').toUpperCase()}
                                                                         </div>
                                                                     )}
-                                                                </>
-                                                            )}
-                                                            {isEditing ? (
-                                                                <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.hotelSign || ''} onChange={(e) => updateLeg('hotelSign', e.target.value)} />
-                                                            ) : (
-                                                                viewingDetails.leg.hotelSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.hotelSign}*</span>
-                                                            )}
-                                                        </>
-                                                    )}
+                                                                </div>
+
+                                                                {viewingDetails.leg.hotelStatus === 'reservado' && (
+                                                                    <>
+                                                                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center', marginBottom: '12px' }}>
+                                                                            <span style={{ color: 'var(--text-muted)' }}>NOME DO HOTEL:</span>
+                                                                            {isEditing ? (
+                                                                                <input
+                                                                                    type="text"
+                                                                                    className="input-field"
+                                                                                    style={{ padding: '4px 8px', height: '32px' }}
+                                                                                    placeholder="Nome do estabelecimento"
+                                                                                    value={viewingDetails.leg.hotelName || ''}
+                                                                                    onChange={(e) => updateLeg('hotelName', e.target.value)}
+                                                                                />
+                                                                            ) : (
+                                                                                <span style={{ color: '#fff' }}>{viewingDetails.leg.hotelName || 'Não informado'}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        {isEditing ? (
+                                                                            <textarea
+                                                                                className="input-field"
+                                                                                style={{ minHeight: '80px', width: '100%', padding: '12px' }}
+                                                                                placeholder="Informações de reserva e hotel..."
+                                                                                value={viewingDetails.leg.hotelDetails || ''}
+                                                                                onChange={(e) => updateLeg('hotelDetails', e.target.value)}
+                                                                            />
+                                                                        ) : (
+                                                                            <div style={{ color: '#fff', fontSize: '0.9rem', whiteSpace: 'pre-wrap', padding: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                                                                                {viewingDetails.leg.hotelDetails || 'Sem detalhes informados'}
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                                {isEditing ? (
+                                                                    <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.hotelSign || ''} onChange={(e) => updateLeg('hotelSign', e.target.value)} />
+                                                                ) : (
+                                                                    viewingDetails.leg.hotelSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.hotelSign}*</span>
+                                                                )}
+                                                            </>
+                                                        )
+                                                    }
                                                 </div>
 
                                                 {/* FBO Section */}
@@ -2091,82 +2079,84 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                         )}
                                                     </div>
 
-                                                    {viewingDetails.leg.hasFbo === false ? (
-                                                        <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
-                                                            <span style={{ color: 'var(--text-muted)', fontWeight: 'bold', letterSpacing: '2px' }}>NÃO</span>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '4px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', width: 'fit-content' }}>
+                                                    {
+                                                        viewingDetails.leg.hasFbo === false ? (
+                                                            <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px dashed var(--glass-border)' }}>
+                                                                <span style={{ color: 'var(--text-muted)', fontWeight: 'bold', letterSpacing: '2px' }}>NÃO</span>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', padding: '4px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', width: 'fit-content' }}>
+                                                                    {isEditing ? (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => updateLeg('fboStatus', 'pendente')}
+                                                                                style={{
+                                                                                    padding: '4px 12px',
+                                                                                    borderRadius: '4px',
+                                                                                    border: '1px solid ' + ((viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#f87171' : 'transparent'),
+                                                                                    background: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#f87171' : 'transparent',
+                                                                                    color: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#fff' : 'var(--text-muted)',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 'bold',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}
+                                                                            >
+                                                                                PENDENTE
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => updateLeg('fboStatus', 'agendado')}
+                                                                                style={{
+                                                                                    padding: '4px 12px',
+                                                                                    borderRadius: '4px',
+                                                                                    border: '1px solid ' + (viewingDetails.leg.fboStatus === 'agendado' ? '#22c55e' : 'transparent'),
+                                                                                    background: viewingDetails.leg.fboStatus === 'agendado' ? '#22c55e' : 'transparent',
+                                                                                    color: viewingDetails.leg.fboStatus === 'agendado' ? '#fff' : 'var(--text-muted)',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 'bold',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}
+                                                                            >
+                                                                                AGENDADO
+                                                                            </button>
+                                                                        </>
+                                                                    ) : (
+                                                                        <div style={{
+                                                                            padding: '4px 12px',
+                                                                            borderRadius: '4px',
+                                                                            background: viewingDetails.leg.fboStatus === 'agendado' ? '#22c55e' : '#f87171',
+                                                                            color: '#fff',
+                                                                            fontSize: '0.75rem',
+                                                                            fontWeight: 'bold'
+                                                                        }}>
+                                                                            {(viewingDetails.leg.fboStatus || 'PENDENTE').toUpperCase()}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
                                                                 {isEditing ? (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => updateLeg('fboStatus', 'pendente')}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + ((viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#ef4444' : 'transparent'),
-                                                                                background: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#ef4444' : 'transparent',
-                                                                                color: (viewingDetails.leg.fboStatus === 'pendente' || !viewingDetails.leg.fboStatus) ? '#fff' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold',
-                                                                                transition: 'all 0.2s'
-                                                                            }}
-                                                                        >
-                                                                            PENDENTE
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => updateLeg('fboStatus', 'agendado')}
-                                                                            style={{
-                                                                                padding: '4px 12px',
-                                                                                borderRadius: '4px',
-                                                                                border: '1px solid ' + (viewingDetails.leg.fboStatus === 'agendado' ? '#22c55e' : 'transparent'),
-                                                                                background: viewingDetails.leg.fboStatus === 'agendado' ? '#22c55e' : 'transparent',
-                                                                                color: viewingDetails.leg.fboStatus === 'agendado' ? '#fff' : 'var(--text-muted)',
-                                                                                cursor: 'pointer',
-                                                                                fontSize: '0.75rem',
-                                                                                fontWeight: 'bold',
-                                                                                transition: 'all 0.2s'
-                                                                            }}
-                                                                        >
-                                                                            AGENDADO
-                                                                        </button>
-                                                                    </>
+                                                                    <textarea
+                                                                        className="input-field"
+                                                                        style={{ minHeight: '80px', width: '100%', padding: '12px', fontSize: '0.85rem' }}
+                                                                        placeholder="Endereço, contatos e informações FBO..."
+                                                                        value={viewingDetails.leg.fboDetails || ''}
+                                                                        onChange={(e) => updateLeg('fboDetails', e.target.value)}
+                                                                    />
                                                                 ) : (
-                                                                    <div style={{
-                                                                        padding: '4px 12px',
-                                                                        borderRadius: '4px',
-                                                                        background: viewingDetails.leg.fboStatus === 'agendado' ? '#22c55e' : '#ef4444',
-                                                                        color: '#fff',
-                                                                        fontSize: '0.75rem',
-                                                                        fontWeight: 'bold'
-                                                                    }}>
-                                                                        {(viewingDetails.leg.fboStatus || 'PENDENTE').toUpperCase()}
+                                                                    <div style={{ color: '#fff', fontSize: '0.9rem', whiteSpace: 'pre-wrap', padding: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+                                                                        {viewingDetails.leg.fboDetails || 'Sem detalhes informados'}
                                                                     </div>
                                                                 )}
-                                                            </div>
-
-                                                            {isEditing ? (
-                                                                <textarea
-                                                                    className="input-field"
-                                                                    style={{ minHeight: '80px', width: '100%', padding: '12px', fontSize: '0.85rem' }}
-                                                                    placeholder="Endereço, contatos e informações FBO..."
-                                                                    value={viewingDetails.leg.fboDetails || ''}
-                                                                    onChange={(e) => updateLeg('fboDetails', e.target.value)}
-                                                                />
-                                                            ) : (
-                                                                <div style={{ color: '#fff', fontSize: '0.9rem', whiteSpace: 'pre-wrap', padding: '8px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
-                                                                    {viewingDetails.leg.fboDetails || 'Sem detalhes informados'}
-                                                                </div>
-                                                            )}
-                                                            {isEditing ? (
-                                                                <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.fboSign || ''} onChange={(e) => updateLeg('fboSign', e.target.value)} />
-                                                            ) : (
-                                                                viewingDetails.leg.fboSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.fboSign}*</span>
-                                                            )}
-                                                        </>
-                                                    )}
+                                                                {isEditing ? (
+                                                                    <input type="text" className="input-field" style={{ padding: '4px 8px', height: '32px', width: '80px', fontStyle: 'italic', marginTop: '8px' }} placeholder="*SIG*" value={viewingDetails.leg.fboSign || ''} onChange={(e) => updateLeg('fboSign', e.target.value)} />
+                                                                ) : (
+                                                                    viewingDetails.leg.fboSign && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', display: 'block', marginTop: '8px' }}>*{viewingDetails.leg.fboSign}*</span>
+                                                                )}
+                                                            </>
+                                                        )
+                                                    }
                                                 </div>
                                             </div>
                                         ) : (
@@ -2182,7 +2172,8 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                     ? (viewingDetails.leg.passengerList || 'Nenhum passageiro listado.')
                                                     : (viewingDetails.leg.catering || 'Catering padrão solicitado.')}
                                             </div>
-                                        )}
+                                        )
+                                        }
                                     </div>
                                     <button
                                         className="premium-button"
@@ -2263,6 +2254,16 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
     if (currentView === 'manage-crew') {
         return (
             <ManageCrew
+                onBack={() => setCurrentView('home')}
+            />
+        );
+    }
+
+    // Render financial view - NOVO
+    if (currentView === 'financial') {
+        return (
+            <FinancialView
+                requests={requests}
                 onBack={() => setCurrentView('home')}
             />
         );
@@ -2689,12 +2690,12 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                 borderRadius: '32px',
                                 maxWidth: '500px',
                                 width: '100%',
-                                border: '1px solid #fbbf24',
+                                border: '1px solid #f87171',
                                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', color: '#fbbf24' }}>
+                                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', color: '#f87171' }}>
                                     <AlertCircle /> Observação do Voo Pendente
                                 </h3>
                             </div>
@@ -2722,7 +2723,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                 <button
                                     className="premium-button"
-                                    style={{ background: '#fbbf24', color: '#000', justifyContent: 'center' }}
+                                    style={{ background: '#f87171', color: '#fff', justifyContent: 'center' }}
                                     onClick={handleConfirmManualPending}
                                 >
                                     Criar Voo Pendente

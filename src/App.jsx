@@ -134,6 +134,14 @@ function App() {
   const [editingRequestId, setEditingRequestId] = useState(null);
 
   const handleBookingSubmit = (data) => {
+    // Garantir que cada leg tenha os estados operacionais padrão
+    const legsWithStatus = data.legs.map(leg => ({
+      ...leg,
+      flightPlanStatus: 'pendente',
+      notamStatus: 'pendente',
+      hasAllocatedSlot: 'pendente'
+    }));
+
     const newRequest = {
       id: Date.now(),
       userId: currentUser?.id || 'anonymous',
@@ -141,8 +149,13 @@ function App() {
       userEmail: currentUser?.email || '',
       timestamp: getTimestamp(),
       ...data,
+      legs: legsWithStatus,
       aircraft: selectedAircraft,
-      status: 'novo'
+      status: 'novo',
+      // Campos globais se necessário (opcional)
+      flightPlan: 'Pendente',
+      allocatedSlot: 'Pendente',
+      notam: 'Pendente'
     };
 
     setHasInteracted(true); // Marca interação do usuário
@@ -420,10 +433,11 @@ function App() {
               </div>
             )}
             {currentView === 'client' && finalClientView()}
-            {currentView === 'coordinator' && (
+            {(currentView === 'coordinator' || currentView === 'financial') && (
               <CoordinatorDashboard
                 requests={requests}
                 onUpdateStatus={updateRequestStatus}
+                initialView={currentView === 'financial' ? 'financial' : 'home'}
                 onGeneratePack={(req, legIdx = null) => {
                   setSelectedRequestForPack(req);
                   setSelectedLegIndex(legIdx);
@@ -432,7 +446,7 @@ function App() {
               />
             )}
             {currentView === 'crew' && (
-              <CrewPortal requests={requests} />
+              <CrewPortal requests={requests} onUpdateRequest={updateRequestStatus} />
             )}
             {currentView === 'flight-pack' && (
               <FlightPack

@@ -102,13 +102,13 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
         }
         switch (status) {
             case 'aprovado': return { label: 'Aprovado', color: '#34d399', icon: <CheckCircle size={16} /> };
-            case 'pendente': return { label: 'Pendente', color: '#fbbf24', icon: <AlertCircle size={16} /> };
+            case 'pendente': return { label: 'Pendente', color: '#f87171', icon: <AlertCircle size={16} /> };
             case 'recusado': return { label: 'Recusado', color: '#f87171', icon: <ShieldAlert size={16} /> };
             case 'cancelamento': return { label: 'Cancelamento Solicitado', color: '#ef4444', icon: <ShieldAlert size={16} /> };
             // Caso explícito já coberto no if acima, mas mantido por segurança
             case 'alteracao_solicitada': return { label: 'Alteração Solicitada', color: '#a855f7', icon: <Edit size={16} /> };
             case 'cancelado': return { label: 'Voo Cancelado', color: '#94a3b8', icon: <ShieldAlert size={16} /> };
-            default: return { label: 'Em Análise', color: '#60a5fa', icon: <Clock size={16} /> };
+            default: return { label: 'Em Análise', color: '#f87171', icon: <Clock size={16} /> };
         }
     };
 
@@ -253,7 +253,7 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                     )}
 
                     {selectedRequest.observation && (
-                        <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid #fbbf24', borderRadius: '20px', color: '#fbbf24' }}>
+                        <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(248, 113, 113, 0.1)', border: '1px solid #f87171', borderRadius: '20px', color: '#f87171' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', fontWeight: 'bold', fontSize: '1rem' }}>
                                 <AlertCircle size={20} /> Mensagem da Coordenação:
                             </div>
@@ -287,7 +287,7 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                 <button
                                     onClick={() => setViewingDetails({ type: 'full', leg, idx })}
                                     className="premium-button"
-                                    style={{ width: '100%', justifyContent: 'center', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)', height: '44px', fontSize: '0.9rem' }}
+                                    style={{ width: '100%', justifyContent: 'center', background: 'rgba(248, 113, 113, 0.1)', border: '1px solid var(--primary)', color: 'var(--primary)', height: '44px', fontSize: '0.9rem' }}
                                 >
                                     {isEditing ? (
                                         <><Edit size={16} /> Fazer Mudanças</>
