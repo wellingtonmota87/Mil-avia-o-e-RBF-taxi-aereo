@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UserPlus, Fingerprint, Trash2, Edit, CheckCircle, X, Search, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDate, getTimestamp } from '../utils/dateUtils';
@@ -12,16 +12,18 @@ const docTypes = [
     { id: 'icao', label: 'ICAO' }
 ];
 
+import { getCrew, upsertCrewMember, deleteCrewMember } from '../utils/supabaseCrew';
+
 export default function ManageCrew({ onBack }) {
-    const [crew, setCrew] = useState(() => {
-        const stored = localStorage.getItem('crew_members');
-        return stored ? JSON.parse(stored) : [];
-    });
+    const [crew, setCrew] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
-    const [editDocModal, setEditDocModal] = useState(null); // { memberId, docId, renewal, expiration }
+    const [editDocModal, setEditDocModal] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         anac: '',
+        email: '',
+        password: '',
         docs: docTypes.reduce((acc, doc) => ({
             ...acc,
             [doc.id]: { renewal: '', expiration: '' }
@@ -30,36 +32,48 @@ export default function ManageCrew({ onBack }) {
     const [editingId, setEditingId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const saveCrew = (data) => {
-        localStorage.setItem('crew_members', JSON.stringify(data));
-        setCrew(data);
-    };
-
-    const handleDocUpdate = (e) => {
-        e.preventDefault();
-        const updated = crew.map(c => {
-            if (c.id === editDocModal.memberId) {
-                return {
-                    ...c,
-                    docs: {
-                        ...(c.docs || {}),
-                        [editDocModal.docId]: {
-                            renewal: editDocModal.renewal,
-                            expiration: editDocModal.expiration
-                        }
-                    }
-                };
+    // Sincronização inicial com Supabase
+    useEffect(() => {
+        async function loadData() {
+            const data = await getCrew();
+            if (data) {
+                setCrew(data);
+                localStorage.setItem('crew_members', JSON.stringify(data));
+            } else {
+                const stored = localStorage.getItem('crew_members');
+                if (stored) setCrew(JSON.parse(stored));
             }
-            return c;
-        });
-        saveCrew(updated);
-        setEditDocModal(null);
+            setIsLoading(false);
+        }
+        loadData();
+    }, []);
+
+    const handleDocUpdate = async (e) => {
+        e.preventDefault();
+        const member = crew.find(c => c.id === editDocModal.memberId);
+        if (!member) return;
+
+        const updatedMember = {
+            ...member,
+            docs: {
+                ...(member.docs || {}),
+                [editDocModal.docId]: {
+                    renewal: editDocModal.renewal,
+                    expiration: editDocModal.expiration
+                }
+            }
+        };
+
+        const result = await upsertCrewMember(updatedMember);
+        if (result) {
+            setCrew(crew.map(c => c.id === editDocModal.memberId ? updatedMember : c));
+            setEditDocModal(null);
+        }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Check ANAC uniqueness
         const anacExists = crew.some(c =>
             c.anac.toLowerCase() === formData.anac.toLowerCase() && c.id !== editingId
         );
@@ -68,28 +82,38 @@ export default function ManageCrew({ onBack }) {
             return;
         }
 
-        if (editingId) {
-            const updated = crew.map(c =>
-                c.id === editingId ? { ...c, ...formData } : c
-            );
-            saveCrew(updated);
-            setEditingId(null);
-        } else {
-            const newMember = {
-                id: Date.now(),
+        const memberData = editingId 
+            ? { ...crew.find(c => c.id === editingId), ...formData }
+            : {
                 ...formData,
                 createdAt: getTimestamp()
             };
-            saveCrew([...crew, newMember]);
-        }
 
-        setFormData({ name: '', anac: '', docs: docTypes.reduce((acc, doc) => ({ ...acc, [doc.id]: { renewal: '', expiration: '' } }), {}) });
-        setShowForm(false);
+        const result = await upsertCrewMember(memberData);
+        if (result) {
+            if (editingId) {
+                setCrew(crew.map(c => c.id === editingId ? result : c));
+                setEditingId(null);
+            } else {
+                setCrew([...crew, result]);
+            }
+            setFormData({ 
+                name: '', 
+                anac: '', 
+                email: '', 
+                password: '', 
+                docs: docTypes.reduce((acc, doc) => ({ ...acc, [doc.id]: { renewal: '', expiration: '' } }), {}) 
+            });
+            setShowForm(false);
+        }
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (confirm('Tem certeza que deseja remover este tripulante?')) {
-            saveCrew(crew.filter(c => c.id !== id));
+            const ok = await deleteCrewMember(id);
+            if (ok) {
+                setCrew(crew.filter(c => c.id !== id));
+            }
         }
     };
 
@@ -154,7 +178,13 @@ export default function ManageCrew({ onBack }) {
                         onClick={() => {
                             if (showForm) {
                                 setEditingId(null);
-                                setFormData({ name: '', anac: '' });
+                                setFormData({ 
+                                    name: '', 
+                                    anac: '', 
+                                    email: '', 
+                                    password: '', 
+                                    docs: docTypes.reduce((acc, doc) => ({ ...acc, [doc.id]: { renewal: '', expiration: '' } }), {}) 
+                                });
                             }
                             setShowForm(!showForm);
                         }}
@@ -188,8 +218,8 @@ export default function ManageCrew({ onBack }) {
                             {editingId ? 'Editar Tripulante' : 'Cadastrar Novo Tripulante'}
                         </h3>
                         <form onSubmit={handleSubmit}>
-                            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-                                <div style={{ flex: 2 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                                <div style={{ gridColumn: 'span 1' }}>
                                     <label className="input-label">Nome Completo</label>
                                     <input
                                         type="text"
@@ -201,7 +231,7 @@ export default function ManageCrew({ onBack }) {
                                         style={{ marginBottom: 0 }}
                                     />
                                 </div>
-                                <div style={{ flex: 1 }}>
+                                <div style={{ gridColumn: 'span 1' }}>
                                     <label className="input-label">Código ANAC</label>
                                     <input
                                         type="text"
@@ -210,6 +240,30 @@ export default function ManageCrew({ onBack }) {
                                         onChange={(e) => setFormData({ ...formData, anac: e.target.value })}
                                         required
                                         placeholder="Ex: 123456"
+                                        style={{ marginBottom: 0 }}
+                                    />
+                                </div>
+                                <div style={{ gridColumn: 'span 1' }}>
+                                    <label className="input-label">E-mail Corporativo</label>
+                                    <input
+                                        type="email"
+                                        className="input-field"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        required
+                                        placeholder="ex@milaviacao.com"
+                                        style={{ marginBottom: 0 }}
+                                    />
+                                </div>
+                                <div style={{ gridColumn: 'span 1' }}>
+                                    <label className="input-label">Senha de Acesso</label>
+                                    <input
+                                        type="password"
+                                        className="input-field"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        required
+                                        placeholder="••••••••"
                                         style={{ marginBottom: 0 }}
                                     />
                                 </div>

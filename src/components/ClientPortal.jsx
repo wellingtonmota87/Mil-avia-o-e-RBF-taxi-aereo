@@ -4,9 +4,11 @@ import { User, Lock, Mail, ChevronRight, Plane, Clock, CheckCircle, AlertCircle,
 import FleetCalendar from './FleetCalendar'; // Importa componente de calendário da frota
 import { formatDateTime } from '../utils/dateUtils'; // Importa função para formatar data e hora
 import { brazilianAirports } from '../data/airports'; // Importa lista de aeroportos brasileiros
+import { authenticateClient } from '../utils/supabaseClients'; // Importa autenticação do Supabase
 
 // Componente principal do portal do cliente - permite login, visualização e edição de solicitações de voo
-export default function ClientPortal({ requests = [], currentUser, onLogin, onLogout, onNewRequest, onUpdateRequest, onEditRequest, onBack }) {
+export default function ClientPortal({ requests = [], currentUser, onLogin, onLogout, onNewRequest, onUpdateRequest, onBack }) {
+    const [isLoading, setIsLoading] = useState(false); // Controla estado de carregamento
     const [isRegistering, setIsRegistering] = useState(false); // Controla se está na tela de cadastro ou login
     const [selectedRequest, setSelectedRequest] = useState(null); // Armazena a solicitação selecionada para visualização
     const [formData, setFormData] = useState({ name: '', email: '', password: '' }); // Dados do formulário de login/cadastro
@@ -81,17 +83,19 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
         return { valid: true };
     };
 
-    // Processa o login ou cadastro do usuário
-    const handleAuth = (e) => {
+    // Processa o login do usuário contra o Supabase
+    const handleAuth = async (e) => {
         e.preventDefault();
-        // Generate a stable ID based on email to avoid disappearance on re-login
-        const email = formData.email ? formData.email.toLowerCase().trim() : '';
-        const stableId = btoa(email).replace(/=/g, '');
-        onLogin({
-            id: stableId,
-            name: formData.name || 'Cliente Demo',
-            email: email
-        });
+        
+        setIsLoading(true);
+        const user = await authenticateClient(formData.email, formData.password);
+        setIsLoading(false);
+
+        if (user) {
+            onLogin(user);
+        } else {
+            alert('Falha na autenticação. Verifique seu e-mail e senha.');
+        }
     };
 
     // Retorna informações de status (label, cor, ícone) baseado no status da solicitação
@@ -145,12 +149,20 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                             <label className="form-label">Senha</label>
                             <div style={{ position: 'relative' }}>
                                 <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                                <input type="password" className="input-field" style={{ paddingLeft: '48px' }} placeholder="••••••••" required />
+                                <input 
+                                    type="password" 
+                                    className="input-field" 
+                                    style={{ paddingLeft: '48px' }} 
+                                    placeholder="••••••••" 
+                                    required 
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                />
                             </div>
                         </div>
 
-                        <button className="premium-button" type="submit" style={{ width: '100%', justifyContent: 'center', marginBottom: '24px' }}>
-                            {isRegistering ? 'Cadastrar' : 'Entrar'} <ChevronRight size={18} />
+                        <button className="premium-button" type="submit" style={{ width: '100%', justifyContent: 'center', marginBottom: '24px' }} disabled={isLoading}>
+                            {isLoading ? 'Autenticando...' : (isRegistering ? 'Cadastrar' : 'Entrar')} <ChevronRight size={18} />
                         </button>
                     </form>
 
@@ -351,7 +363,7 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                                                     <input type="date" className="input-field" value={editingRequest?.legs?.[viewingDetails.idx]?.date || ''} onChange={(e) => handleLegUpdate(viewingDetails.idx, 'date', e.target.value)} style={{ paddingLeft: '40px', fontSize: '0.85rem' }} />
                                                                 </div>
                                                             </div>
-                                                            <div className="form-group">
+                                                            <div className="form-group" style={{ position: 'relative' }}>
                                                                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Origem</label>
                                                                 <div style={{ position: 'relative' }}>
                                                                     <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -362,9 +374,23 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                                                         onChange={(e) => handleLegUpdate(viewingDetails.idx, 'origin', e.target.value)}
                                                                         style={{ paddingLeft: '40px', fontSize: '0.85rem' }}
                                                                     />
+                                                                    {activeAutocomplete.index === viewingDetails.idx && activeAutocomplete.field === 'origin' && activeAutocomplete.results.length > 0 && (
+                                                                        <div className="glass-morphism" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, marginTop: '4px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', background: '#1a1a1a' }}>
+                                                                            {activeAutocomplete.results.map(ap => (
+                                                                                <div 
+                                                                                    key={ap.icao} 
+                                                                                    onClick={() => selectAirport(viewingDetails.idx, 'origin', ap)}
+                                                                                    style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}
+                                                                                >
+                                                                                    <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{ap.icao} - {ap.city}/{ap.state}</div>
+                                                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ap.name}</div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            <div className="form-group">
+                                                            <div className="form-group" style={{ position: 'relative' }}>
                                                                 <label className="form-label" style={{ fontSize: '0.75rem' }}>Destino</label>
                                                                 <div style={{ position: 'relative' }}>
                                                                     <MapPin size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -375,6 +401,20 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                                                         onChange={(e) => handleLegUpdate(viewingDetails.idx, 'destination', e.target.value)}
                                                                         style={{ paddingLeft: '40px', fontSize: '0.85rem' }}
                                                                     />
+                                                                    {activeAutocomplete.index === viewingDetails.idx && activeAutocomplete.field === 'destination' && activeAutocomplete.results.length > 0 && (
+                                                                        <div className="glass-morphism" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, marginTop: '4px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', background: '#1a1a1a' }}>
+                                                                            {activeAutocomplete.results.map(ap => (
+                                                                                <div 
+                                                                                    key={ap.icao} 
+                                                                                    onClick={() => selectAirport(viewingDetails.idx, 'destination', ap)}
+                                                                                    style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}
+                                                                                >
+                                                                                    <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{ap.icao} - {ap.city}/{ap.state}</div>
+                                                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ap.name}</div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="form-group">
@@ -552,7 +592,11 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
         );
     }
 
-    const clientRequests = requests.filter(r => r.userId === currentUser.id);
+    // Filter requests based on companies managed by current user
+    const clientRequests = (requests || []).filter(req => {
+        if (!currentUser?.companies || !Array.isArray(currentUser.companies)) return false;
+        return currentUser.companies.includes(req.requestor);
+    });
 
     return (
         <div className="container" style={{ padding: '80px 0' }}>
@@ -670,6 +714,26 @@ export default function ClientPortal({ requests = [], currentUser, onLogin, onLo
                                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.8, fontWeight: 'bold' }}>
                                                 {req.timestamp}
                                             </div>
+                                            {req.status === 'aprovado' && (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedPackRequest(req);
+                                                        setShowPackModal(true);
+                                                    }}
+                                                    className="premium-button"
+                                                    style={{ 
+                                                        padding: '8px 12px', 
+                                                        background: 'rgba(255,255,255,0.05)', 
+                                                        color: 'var(--primary)', 
+                                                        border: '1px solid var(--glass-border)',
+                                                        fontSize: '0.7rem',
+                                                        marginTop: '8px'
+                                                    }}
+                                                >
+                                                    <FileArchive size={14} /> Pack de Voo
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
 

@@ -164,7 +164,7 @@ export default function BookingForm({ selectedAircraft, onSubmit, initialData, i
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => { // Envia o formulário
+    const handleSubmit = async (e) => { // Envia o formulário
         e.preventDefault();
         if (!selectedAircraft) {
             alert('Por favor, selecione uma aeronave primeiro.');

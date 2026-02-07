@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, UserPlus, Mail, Building2, CheckCircle, Clock, Edit, Trash2, Copy, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTimestamp } from '../utils/dateUtils';
@@ -12,15 +12,16 @@ const AVAILABLE_COMPANIES = [
     'GOL Linhas Aéreas'
 ];
 
+import { getRequesters, upsertClient, deleteClient } from '../utils/supabaseClients';
+
 export default function ManageRequesters({ onBack, currentCoordinator }) {
-    const [requesters, setRequesters] = useState(() => {
-        const stored = localStorage.getItem('requesters');
-        return stored ? JSON.parse(stored) : [];
-    });
+    const [requesters, setRequesters] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        password: '',
         companies: []
     });
     const [showEmailModal, setShowEmailModal] = useState(false);
@@ -28,18 +29,27 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
     const [linkCopied, setLinkCopied] = useState(false);
     const [editingId, setEditingId] = useState(null);
 
-
-
-    const saveRequesters = (data) => {
-        localStorage.setItem('requesters', JSON.stringify(data));
-        setRequesters(data);
-    };
+    // Sincronização inicial
+    useEffect(() => {
+        async function loadData() {
+            const data = await getRequesters();
+            if (data) {
+                setRequesters(data);
+                localStorage.setItem('requesters', JSON.stringify(data));
+            } else {
+                const stored = localStorage.getItem('requesters');
+                if (stored) setRequesters(JSON.parse(stored));
+            }
+            setIsLoading(false);
+        }
+        loadData();
+    }, []);
 
     const generateToken = () => {
         return Date.now().toString(36) + Math.random().toString(36).substring(2);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (formData.companies.length === 0) {
@@ -47,7 +57,6 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
             return;
         }
 
-        // Check email uniqueness
         const emailExists = requesters.some(r =>
             r.email === formData.email && r.id !== editingId
         );
@@ -59,40 +68,37 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
         const token = generateToken();
         const link = `${window.location.origin}/?token=${token}`;
 
-        if (editingId) {
-            // Edit existing
-            const updated = requesters.map(r =>
-                r.id === editingId
-                    ? { ...r, ...formData }
-                    : r
-            );
-            saveRequesters(updated);
-            setEditingId(null);
-        } else {
-            // Create new
-            const newRequester = {
-                id: Date.now(),
+        const requesterData = editingId 
+            ? { ...requesters.find(r => r.id === editingId), ...formData }
+            : {
                 ...formData,
-                password: null,
-                status: 'pending',
+                status: 'approved',
                 token: token,
                 createdAt: getTimestamp(),
                 createdBy: currentCoordinator
             };
-            saveRequesters([...requesters, newRequester]);
 
-            // Show email modal
-            setGeneratedLink(link);
-            setShowEmailModal(true);
+        const result = await upsertClient(requesterData);
+        if (result) {
+            if (editingId) {
+                setRequesters(requesters.map(r => r.id === editingId ? result : r));
+                setEditingId(null);
+            } else {
+                setRequesters([...requesters, result]);
+                setGeneratedLink(link);
+                setShowEmailModal(true);
+            }
+            setFormData({ name: '', email: '', password: '', companies: [] });
+            setShowForm(false);
         }
-
-        setFormData({ name: '', email: '', companies: [] });
-        setShowForm(false);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (confirm('Tem certeza que deseja excluir este solicitante?')) {
-            saveRequesters(requesters.filter(r => r.id !== id));
+            const ok = await deleteClient(id);
+            if (ok) {
+                setRequesters(requesters.filter(r => r.id !== id));
+            }
         }
     };
 
@@ -188,7 +194,7 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                             {editingId ? 'Editar Solicitante' : 'Cadastrar Novo Solicitante'}
                         </h3>
                         <form onSubmit={handleSubmit}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' }}>
                                 <div>
                                     <label className="input-label">Nome Completo *</label>
                                     <input
@@ -207,6 +213,17 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="input-label">Senha de Acesso *</label>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        required
+                                        placeholder="Defina uma senha"
                                     />
                                 </div>
                             </div>
@@ -255,7 +272,7 @@ export default function ManageRequesters({ onBack, currentCoordinator }) {
                                 }}
                             >
                                 <CheckCircle size={18} />
-                                {editingId ? 'Salvar Alterações' : 'Cadastrar e Enviar Convite'}
+                                {editingId ? 'Salvar Alterações' : 'Cadastrar Solicitante'}
                             </button>
                         </form>
                     </motion.div>

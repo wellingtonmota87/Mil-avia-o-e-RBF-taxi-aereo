@@ -11,13 +11,11 @@ node_modules
 dist-ssr
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Temporary files
+*.rar
+*.zip

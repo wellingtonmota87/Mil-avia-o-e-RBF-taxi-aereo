@@ -1,103 +1,132 @@
-import React, { useState, useEffect } from 'react';
-import { Plane, Shield, Globe, Clock, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import AircraftSelector from './components/AircraftSelector';
-import BookingForm from './components/BookingForm';
-import PortalHome from './components/PortalHome';
-import CoordinatorDashboard from './components/CoordinatorDashboard';
-import ClientPortal from './components/ClientPortal';
-import FleetCalendar from './components/FleetCalendar';
-import SetPassword from './components/SetPassword';
-import CrewPortal from './components/CrewPortal';
-import FlightPack from './components/FlightPack';
+import React, { useState, useEffect } from 'react'; // Importando React e hooks necessários
+import { Plane, Shield, Globe, Clock, CheckCircle, ArrowRight, ArrowLeft, Users, ShieldAlert, LogOut, Plus, Calendar, MapPin, Coffee, Edit, FileText, X, Layout, FilePlus, FileArchive, ChevronRight, Check } from 'lucide-react'; // Ícones para a interface
+import { motion, AnimatePresence } from 'framer-motion'; // Biblioteca para animações suaves
+import { testSupabaseConnection, fetchFlights, upsertFlight } from './utils/supabaseFlights';
+import AircraftSelector from './components/AircraftSelector'; // Componente para seleção de aeronave
+import BookingForm from './components/BookingForm'; // Formulário de reserva
+import PortalHome from './components/PortalHome'; // Página inicial do portal
+import CoordinatorDashboard from './components/CoordinatorDashboard'; // Dashboard para coordenadores
+import ClientPortal from './components/ClientPortal'; // Portal para clientes acompanharem suas solicitações
+import FleetCalendar from './components/FleetCalendar'; // Calendário para visualização da agenda de voos
+import SetPassword from './components/SetPassword'; // Componente para configuração de senha via token (link mágico)
+import CrewPortal from './components/CrewPortal'; // Portal para tripulação acompanhar suas missões
+import FlightPack from './components/FlightPack'; // Componente para gerenciamento do "Pack de Voo" (dados extras para cada perna do voo)
 
-import CompanyProfile from './components/CompanyProfile';
-import { saveFlights, loadFlights, forceSaveSync, diagnoseStorage, startAutoSave } from './utils/flightPersistence';
-import { getTimestamp } from './utils/dateUtils';
+import CompanyProfile from './components/CompanyProfile'; // Página de perfil da empresa, mostrando detalhes e diferenciais
+import { saveFlights, loadFlights, startAutoSave } from './utils/flightPersistence'; // Funções para persistência de dados local (substituindo o uso direto do localStorage para maior controle e robustez)
+import { getTimestamp } from './utils/dateUtils'; // Função utilitária para obter timestamp formatado
 
 // Flag de debug - mude para true para ativar logs detalhados
-const DEBUG_PERSISTENCE = false;
+const DEBUG_PERSISTENCE = false; // Diagnóstico detalhado para persistência local (substituindo o console.log direto)
 
 function App() {
-  const [currentView, setCurrentView] = useState(() => {
-    const saved = localStorage.getItem('milavia_view');
-    return saved || 'home';
+  const [currentView, setCurrentView] = useState(() => { // Persistência da última view acessada
+    const saved = localStorage.getItem('milavia_view'); // Tenta recuperar a última view acessada
+    return saved || 'home'; // Se não houver, inicia na 'home'
   });
-  const [selectedCompany, setSelectedCompany] = useState(null); // 'mil' or 'rbf'
-  const [selectedAircraft, setSelectedAircraft] = useState(null);
-  const [selectedRequestForPack, setSelectedRequestForPack] = useState(null);
-  const [selectedLegIndex, setSelectedLegIndex] = useState(null);
-  const [isSubmitted, setIsSubmitted] = useState(() => {
-    return localStorage.getItem('milavia_submitted') === 'true';
+  const [selectedCompany, setSelectedCompany] = useState(null); // 'mil' or 'rbf' // Estado para controlar a empresa selecionada (usado no perfil da empresa)
+  const [selectedAircraft, setSelectedAircraft] = useState(null); // Estado para controlar a aeronave selecionada (usado no fluxo de criação/edição de solicitações)
+  const [selectedRequestForPack, setSelectedRequestForPack] = useState(null); // Estado para controlar qual solicitação está sendo editada no Flight Pack
+  const [selectedLegIndex, setSelectedLegIndex] = useState(null); // Estado para controlar qual perna do voo está sendo editada no Flight Pack
+  const [isSubmitted, setIsSubmitted] = useState(() => { // Persistência do estado de submissão (para mostrar tela de sucesso após enviar uma solicitação)
+    return localStorage.getItem('milavia_submitted') === 'true'; //
   });
 
-  // Persistence for view and submitted state
-  useEffect(() => {
-    localStorage.setItem('milavia_view', currentView);
-  }, [currentView]);
+  // Supress local redundancy logs if needed, but keeping for debug for now
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Carregar dados iniciais (Supabase com fallback localStorage)
   useEffect(() => {
-    localStorage.setItem('milavia_submitted', isSubmitted.toString());
-  }, [isSubmitted]);
+    async function loadInitialData() {
+      console.log('[SUPABASE] 🔄 Sincronizando dados...');
+      const supabaseData = await fetchFlights();
+      
+      if (supabaseData) {
+        console.log(`[SUPABASE] ✅ ${supabaseData.length} voos carregados do banco.`);
+        setRequests(supabaseData);
+        // Atualiza o localstorage para manter o cache em dia
+        saveFlights(supabaseData);
+      } else {
+        console.warn('[SUPABASE] ⚠️ Falha ao carregar do banco, usando cache local...');
+        const localData = loadFlights();
+        setRequests(localData);
+      }
+      setIsLoading(false);
+    }
+    loadInitialData();
+  }, []);
+
+  // Persistence for view and submitted state //
+  useEffect(() => { //
+    localStorage.setItem('milavia_view', currentView); // Salva a última view acessada no localStorage para persistência entre sessões
+  }, [currentView]); // Sempre que a view mudar, atualiza o localStorage
+
+  useEffect(() => { // Salva o estado de submissão no localStorage para persistência entre sessões
+    localStorage.setItem('milavia_submitted', isSubmitted.toString()); // Converte o boolean para string antes de salvar
+  }, [isSubmitted]); // Sempre que o estado de submissão mudar, atualiza o localStorage
 
   // Scroll to top on navigation or state changes
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentView, isSubmitted, selectedAircraft, selectedCompany]);
+  }, [currentView, isSubmitted, selectedAircraft, selectedCompany]); // Sempre que a view, estado de submissão, aeronave selecionada ou empresa selecionada mudar, rola para o topo da página
+
+useEffect(() => {
+  testSupabaseConnection(); 
+}, []);
 
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('milavia_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [requests, setRequests] = useState(() => {
-    console.log('[APP] 🔄 Inicializando aplicação e carregando voos...');
+  const [crewUser, setCrewUser] = useState(() => {
+    const saved = localStorage.getItem('milavia_crew_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
-    // Usar o novo sistema ultra robusto
-    let flights = loadFlights();
+  // Lógica de auto-conclusão de voos passados (executada após carregar dados)
+  useEffect(() => {
+    if (isLoading || requests.length === 0) return;
 
-    // Auto-complete flights that have passed
     const today = new Date().toISOString().split('T')[0];
-    flights = flights.map(req => {
-      if (req.status !== 'aprovado' || !req.legs || req.legs.length === 0) return req;
-
-      const lastLeg = req.legs[req.legs.length - 1];
-      if (lastLeg.date < today) {
-        return { ...req, status: 'concluido' };
-      }
-      return req;
+    const needsUpdate = requests.some(req => {
+      const isFinished = req.legs && req.legs.every(leg => leg.date < today);
+      return isFinished && req.status !== 'concluido' && req.status !== 'cancelado';
     });
 
-    // Executar diagnóstico na primeira carga
-    diagnoseStorage();
-
-    return flights;
-  });
+    if (needsUpdate) {
+      console.log('[APP] 📅 Auto-concluindo voos que já passaram...');
+      setRequests(prev => prev.map(req => {
+        const isFinished = req.legs && req.legs.every(leg => leg.date < today);
+        if (isFinished && req.status !== 'concluido' && req.status !== 'cancelado') {
+          const updated = { ...req, status: 'concluido' };
+          upsertFlight(updated);
+          return updated;
+        }
+        return req;
+      }));
+    }
+  }, [isLoading, requests]); // Adicionado requests para satisfazer o linter, protegido pelo needsUpdate
 
   // Estado para controlar se houve interação do usuário (para evitar salvamentos acidentais na carga inicial)
   const [hasInteracted, setHasInteracted] = useState(false);
 
-  // Sistema ultra robusto de salvamento automático
-  // Só salva se houver dados OU se o usuário já tiver interagido com a aplicação
+  // Sistema de salvamento automático (Supabase + LocalStorage)
   useEffect(() => {
-    // Se a lista tiver dados, é seguro salvar (estamos atualizando dados existentes)
+    if (isLoading) return; // Não salvar enquanto estiver carregando
+
     if (requests.length > 0) {
       saveFlights(requests);
+      // O salvamento no Supabase é feito individualmente nas funções de ação (Submit/Update)
+      // para evitar excesso de requisições e garantir atomicidade
+    } else if (hasInteracted) {
+      saveFlights(requests, true);
     }
-    // Se a lista estiver vazia, SÓ salvamos se tivermos certeza que foi uma ação do usuário
-    // A função saveFlights agora também tem uma proteção interna contra wipedia, mas aqui evitamos sequer chamar
-    else if (hasInteracted) {
-      console.log('Salvando lista vazia (Ação do usuário detectada)');
-      saveFlights(requests, true); // Forçamos o salvamento pois sabemos que houve interação
-    }
-  }, [requests, hasInteracted]);
+  }, [requests, hasInteracted, isLoading]);
 
-  // Migração ativa: toda vez que o app abre, garantimos que dados antigos virem "final" e limpamos as chaves temporárias
+  // Migração ativa
   useEffect(() => {
-    const chavesAntigas = ['milavia_requests_v5', 'milavia_requests_v4', 'milavia_requests_v3', 'milavia_requests_v2', 'milavia_requests'];
-    chavesAntigas.forEach(chave => {
-      // Não removemos aqui no mount para evitar riscos, apenas as lógicas acima já resolvem.
-    });
   }, []);
 
   useEffect(() => {
@@ -108,6 +137,14 @@ function App() {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    if (crewUser) {
+      localStorage.setItem('milavia_crew_user', JSON.stringify(crewUser));
+    } else {
+      localStorage.removeItem('milavia_crew_user');
+    }
+  }, [crewUser]);
+
   // Proteção adicional: Auto-salvamento periódico e salvamento antes de descarregar
   useEffect(() => {
     // Ativar auto-salvamento a cada 5 segundos
@@ -115,12 +152,8 @@ function App() {
 
     const handleBeforeUnload = () => {
       console.log('[APP] 🚨 Página sendo fechada/atualizada - salvamento forçado!');
-      // Se tiver requests, salva. Se não tiver, só salva se houve interação.
-      if (requests.length > 0) {
-        forceSaveSync(requests);
-      } else if (hasInteracted) {
-        forceSaveSync(requests, true);
-      }
+      // Sincronização secundária se necessário (mantendo compatibilidade legada)
+      saveFlights(requests);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -142,8 +175,8 @@ function App() {
       hasAllocatedSlot: 'pendente'
     }));
 
-    const newRequest = {
-      id: Date.now(),
+    const updatedRequest = {
+      id: editingRequestId || Date.now(),
       userId: currentUser?.id || 'anonymous',
       userName: currentUser?.name || 'Cliente Externo',
       userEmail: currentUser?.email || '',
@@ -151,33 +184,23 @@ function App() {
       ...data,
       legs: legsWithStatus,
       aircraft: selectedAircraft,
-      status: 'novo',
-      // Campos globais se necessário (opcional)
+      status: editingRequestId ? (requests.find(r => r.id === editingRequestId)?.status === 'recusado' ? 'novo' : requests.find(r => r.id === editingRequestId)?.status) : 'novo',
+      // Campos globais
       flightPlan: 'Pendente',
       allocatedSlot: 'Pendente',
       notam: 'Pendente'
     };
 
-    setHasInteracted(true); // Marca interação do usuário
+    setHasInteracted(true);
+
+    // Salvar no Supabase IMEDIATAMENTE
+    upsertFlight(updatedRequest);
 
     if (editingRequestId) {
-      setRequests(prev => prev.map(req => {
-        if (req.id === editingRequestId) {
-          return {
-            ...req,
-            ...data,
-            userId: currentUser?.id || req.userId || 'anonymous',
-            status: req.status === 'recusado' ? 'novo' : req.status,
-            observation: req.observation,
-            oldData: { ...req },
-            timestamp: getTimestamp()
-          };
-        }
-        return req;
-      }));
+      setRequests(prev => prev.map(req => req.id === editingRequestId ? updatedRequest : req));
       setEditingRequestId(null);
     } else {
-      setRequests(prev => [newRequest, ...prev]);
+      setRequests(prev => [updatedRequest, ...prev]);
     }
 
     setIsSubmitted(true);
@@ -192,43 +215,49 @@ function App() {
   const updateRequestStatus = (requestId, newStatus, observation = null, editedData = null) => {
     setHasInteracted(true); // Marca interação do usuário
 
-    // Se editedData tem todas as propriedades de um novo request
-    if (editedData && editedData.userId === 'coordinator-manual' && !requests.find(r => r.id === requestId)) {
-      setRequests(prev => [editedData, ...prev]);
-      return;
-    }
+    let finalUpdatedRequest = null;
 
     setRequests(prev => {
-      return prev.map(req => {
+      const newList = prev.map(req => {
         if (req.id === requestId) {
-          // Lógica para preservar o histórico quando o cliente solicita alteração
           let base = editedData || req;
 
           if (editedData && newStatus === 'alteracao_solicitada') {
-            // Se estamos recebendo uma edição do cliente, salvamos o estado anterior (original) como oldData
-            // para que o coordenador possa ver o "diff" (destaque do que mudou)
             base = {
               ...editedData,
-              oldData: req.oldData ? req.oldData : req // Mantém o oldData original se já existir, senão usa o atual
+              oldData: req.oldData ? req.oldData : req
             };
 
-            // Caso especial: se o request estava "aprovado" ou "pendente", ele é a versão estável.
-            // Então garantimos que o oldData seja EXATAMENTE ele.
             if (req.status === 'aprovado' || req.status === 'pendente') {
               base.oldData = req;
             }
           }
 
           const finalObservation = observation !== null ? observation : (base.observation || req.observation);
-          return {
+          const updated = {
             ...base,
             status: newStatus,
             observation: finalObservation
           };
+          finalUpdatedRequest = updated;
+          return updated;
         }
         return req;
       });
+
+      // Se for um novo request manual que não estava na lista
+      if (editedData && editedData.userId === 'coordinator-manual' && !prev.find(r => r.id === requestId)) {
+        finalUpdatedRequest = { ...editedData, status: newStatus, observation };
+        return [finalUpdatedRequest, ...prev];
+      }
+
+      return newList;
     });
+
+    // Sincronizar com Supabase
+    if (finalUpdatedRequest) {
+      upsertFlight(finalUpdatedRequest);
+    }
   };
 
 
@@ -446,7 +475,13 @@ function App() {
               />
             )}
             {currentView === 'crew' && (
-              <CrewPortal requests={requests} onUpdateRequest={updateRequestStatus} />
+              <CrewPortal 
+                requests={requests} 
+                onUpdateRequest={updateRequestStatus} 
+                currentUser={crewUser}
+                onLogin={setCrewUser}
+                onLogout={() => setCrewUser(null)}
+              />
             )}
             {currentView === 'flight-pack' && (
               <FlightPack

@@ -11,6 +11,8 @@ import FinancialView from './FinancialView'; // Importa visualização financeir
 import { Fingerprint as FingerprintIcon } from 'lucide-react'; // Importa ícone de impressão digital
 import { formatDate, getTimestamp, formatDateTime } from '../utils/dateUtils'; // Importa funções de data
 import { brazilianAirports } from '../data/airports'; // Importa lista de aeroportos brasileiros
+import { getCrew } from '../utils/supabaseCrew'; // Importa dados da tripulação do Supabase
+import { fetchFleet } from '../utils/supabaseFleet'; // Importa dados da frota do Supabase
 
 // Componente principal do painel do coordenador - gerencia autenticação, solicitações de voo e operações
 export default function CoordinatorDashboard({ requests = [], onUpdateStatus, onGeneratePack, initialView = 'home' }) {
@@ -35,10 +37,26 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
     const [manualPendingReason, setManualPendingReason] = useState(''); // Razão da pendência de voo manual
     const [currentView, setCurrentView] = useState(initialView); // Visualização atual: 'home', 'flight-panel', 'by-client', 'financial'
     const [filterCanceled, setFilterCanceled] = useState(false); // Filtro para voos cancelados
-    const [crewDatabase] = useState(() => { // Banco de dados de tripulação
-        const stored = localStorage.getItem('crew_members');
-        return stored ? JSON.parse(stored) : [];
-    });
+    const [crew, setCrew] = useState([]);
+    const [aircrafts, setAircrafts] = useState([
+        { id: 1, name: 'PT-RBZ | Global 6000', type: 'Ultra Long Range', passengers: 13 },
+        { id: 2, name: 'PS-MEP | Citation CJ4', type: 'Light Jet', passengers: 10 },
+        { id: 3, name: 'PR-KRT | Citation CJ2+', type: 'Light Jet', passengers: 8 },
+        { id: 4, name: 'PS-MIB | Citation M2', type: 'Entry Level Jet', passengers: 6 }
+    ]);
+    
+    React.useEffect(() => {
+        async function loadData() {
+            const [crewData, fleetData] = await Promise.all([
+                getCrew(),
+                fetchFleet()
+            ]);
+            if (crewData) setCrew(crewData);
+            if (fleetData && fleetData.length > 0) setAircrafts(fleetData);
+        }
+        loadData();
+    }, []);
+
     const [activeAutocomplete, setActiveAutocomplete] = useState({ index: null, field: null, results: [] }); // Controla autocomplete de aeroportos
 
     // Hook para rolar para o topo ao navegar entre telas
@@ -176,13 +194,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
         setEditedRequest(prev => ({ ...prev, [field]: value }));
     };
 
-    // Lista de aeronaves disponíveis
-    const aircrafts = [
-        { id: 1, name: 'PT-RBZ | Global 6000', type: 'Ultra Long Range', passengers: 13 },
-        { id: 2, name: 'PS-MEP | Citation CJ4', type: 'Light Jet', passengers: 10 },
-        { id: 3, name: 'PR-KRT | Citation CJ2+', type: 'Light Jet', passengers: 8 },
-        { id: 4, name: 'PS-MIB | Citation M2', type: 'Entry Level Jet', passengers: 6 }
-    ];
+    // A lista de aeronaves agora é gerenciada pelo estado 'aircrafts' carregado do Supabase
 
     // Atualiza a aeronave selecionada durante a edição
     const handleAircraftChange = (id) => {
@@ -217,7 +229,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
 
         // Auto-fill ANAC if name matches exactly or we find a perfect match
         if (field === 'name') {
-            const member = crewDatabase.find(c => c.name.toLowerCase() === value.toLowerCase());
+            const member = crew.find(c => c.name.toLowerCase() === value.toLowerCase());
             if (member) {
                 newCrew[index].anac = member.anac;
             }
@@ -604,7 +616,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                         <div>
                             <h2 style={{ fontSize: '2rem', marginBottom: '8px' }}>Detalhes da Solicitação</h2>
                             <p style={{ color: 'var(--text-muted)' }}>
-                                Recebido em: {selectedRequest.timestamp}
+                                Recebido em: {selectedRequest?.timestamp}
                             </p>
                         </div>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -626,7 +638,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                 </button>
                             )}
                             <div style={{ padding: '12px 24px', background: 'var(--primary-light)', borderRadius: '12px', border: '1px solid var(--primary)', color: 'var(--primary)', fontWeight: 'bold' }}>
-                                {isEditing ? editedRequest.aircraft?.name : selectedRequest.aircraft?.name}
+                                {isEditing ? editedRequest?.aircraft?.name : selectedRequest?.aircraft?.name}
                             </div>
                             {isEditing && (
                                 <>
@@ -654,7 +666,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
                                 <AlertCircle size={18} /> Observação da Pendência:
                             </div>
-                            <p style={{ margin: 0, fontStyle: 'italic' }}>"{selectedRequest.observation}"</p>
+                            <p style={{ margin: 0, fontStyle: 'italic' }}>"{selectedRequest?.observation}"</p>
                         </div>
                     )}
 
@@ -670,7 +682,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         <input
                                             type="text"
                                             className="input-field"
-                                            value={editedRequest.name}
+                                            value={editedRequest?.name || ''}
                                             onChange={(e) => handleEditChange('name', e.target.value)}
                                             style={{ width: '100%' }}
                                         />
@@ -680,7 +692,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         <input
                                             type="text"
                                             className="input-field"
-                                            value={editedRequest.requestor || ''}
+                                            value={editedRequest?.requestor || ''}
                                             onChange={(e) => handleEditChange('requestor', e.target.value)}
                                             style={{ width: '100%' }}
                                         />
@@ -690,7 +702,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         <input
                                             type="email"
                                             className="input-field"
-                                            value={editedRequest.email}
+                                            value={editedRequest?.email || ''}
                                             onChange={(e) => handleEditChange('email', e.target.value)}
                                             style={{ width: '100%' }}
                                         />
@@ -725,7 +737,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                             padding: '0 12px',
                                             border: '1px solid var(--primary)'
                                         }}
-                                        value={editedRequest.aircraft?.id}
+                                        value={editedRequest?.aircraft?.id}
                                         onChange={(e) => handleAircraftChange(e.target.value)}
                                     >
                                         {aircrafts.map(ac => (
@@ -739,7 +751,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                         ))}
                                     </select>
                                     <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                        <strong>Configuração:</strong> {editedRequest.aircraft?.passengers} PAX / {editedRequest.aircraft?.type}
+                                        <strong>Configuração:</strong> {editedRequest?.aircraft?.passengers} PAX / {editedRequest?.aircraft?.type}
                                     </p>
                                 </div>
                             ) : (
@@ -752,10 +764,10 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                     </div>
 
                     <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        Cronograma de Voo ({isEditing ? editedRequest.legs?.length : selectedRequest.legs?.length} Trechos)
+                        Cronograma de Voo ({isEditing ? editedRequest?.legs?.length : selectedRequest?.legs?.length} Trechos)
                     </h3>
 
-                    {(isEditing ? editedRequest.legs : selectedRequest.legs)?.map((leg, idx) => (
+                    {(isEditing ? editedRequest?.legs : selectedRequest?.legs)?.map((leg, idx) => (
                         <div key={idx} style={{
                             background: 'rgba(255,255,255,0.02)',
                             borderRadius: '20px',
@@ -861,7 +873,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                 list="crew-list"
                                                 className="input-field"
                                                 placeholder="Nome Completo"
-                                                value={editedRequest.crew?.[idx]?.name || ''}
+                                                value={editedRequest?.crew?.[idx]?.name || ''}
                                                 onChange={(e) => handleEditCrewChange(idx, 'name', e.target.value)}
                                                 style={{ marginBottom: 0 }}
                                             />
@@ -869,7 +881,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                                 type="text"
                                                 className="input-field"
                                                 placeholder="Código ANAC"
-                                                value={editedRequest.crew?.[idx]?.anac || ''}
+                                                value={editedRequest?.crew?.[idx]?.anac || ''}
                                                 onChange={(e) => handleEditCrewChange(idx, 'anac', e.target.value)}
                                                 style={{ marginBottom: 0 }}
                                             />
@@ -877,7 +889,7 @@ export default function CoordinatorDashboard({ requests = [], onUpdateStatus, on
                                     </div>
                                 ))}
                                 <datalist id="crew-list">
-                                    {crewDatabase.map(c => <option key={c.id} value={c.name} />)}
+                                    {crew.map(c => <option key={c.id} value={c.name} />)}
                                 </datalist>
                             </div>
                         ) : (

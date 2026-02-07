@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDate, formatDateTime } from '../utils/dateUtils';
+import { formatDateTime } from '../utils/dateUtils';
 import { brazilianAirports } from '../data/airports';
+import { authenticateCrew } from '../utils/supabaseCrew';
 import {
     Navigation2,
     Plane,
@@ -24,10 +25,17 @@ import {
     Trash2,
     FileText,
     Upload,
-    Eye
+    Eye,
+    User,
+    Lock,
+    Mail,
+    LogOut,
+    ArrowLeft
 } from 'lucide-react';
 
-export default function CrewPortal({ requests = [], onUpdateRequest }) {
+export default function CrewPortal({ requests = [], onUpdateRequest, currentUser, onLogin, onLogout }) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [authFormData, setAuthFormData] = useState({ email: '', password: '' });
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFlight, setSelectedFlight] = useState(null);
     const [filterStatus, setFilterStatus] = useState('all'); // 'all', 'upcoming', 'completed'
@@ -60,7 +68,7 @@ export default function CrewPortal({ requests = [], onUpdateRequest }) {
             try {
                 const base64 = await convertToBase64(file);
                 const newFile = {
-                    id: Date.now(),
+                    id: `file-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
                     name: file.name,
                     type: file.type,
                     size: (file.size / 1024).toFixed(1) + ' KB',
@@ -85,6 +93,78 @@ export default function CrewPortal({ requests = [], onUpdateRequest }) {
         }
     };
 
+    const handleAuth = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        const user = await authenticateCrew(authFormData.email, authFormData.password);
+        setIsLoading(false);
+
+        if (user) {
+            onLogin(user);
+        } else {
+            alert('Falha na autenticação. Verifique seu e-mail e senha.');
+        }
+    };
+
+    if (!currentUser) {
+        return (
+            <div className="container" style={{ padding: '80px 0', maxWidth: '500px' }}>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-morphism" style={{ padding: '48px', borderRadius: '32px' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                        <div style={{ background: 'var(--primary-light)', width: '64px', height: '64px', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                            <Lock size={32} color="var(--primary)" />
+                        </div>
+                        <h2 style={{ fontSize: '2rem', marginBottom: '8px' }}>Cockpit Operacional</h2>
+                        <p style={{ color: 'var(--text-muted)' }}>Acesse suas escalas e documentos técnicos.</p>
+                    </div>
+
+                    <form onSubmit={handleAuth}>
+                        <div className="form-group" style={{ marginBottom: '20px' }}>
+                            <label className="form-label">E-mail Corporativo</label>
+                            <div style={{ position: 'relative' }}>
+                                <Mail size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                <input 
+                                    type="email" 
+                                    className="input-field" 
+                                    style={{ paddingLeft: '48px' }} 
+                                    placeholder="seu@milaviacao.com" 
+                                    required 
+                                    value={authFormData.email} 
+                                    onChange={e => setAuthFormData({ ...authFormData, email: e.target.value })} 
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '32px' }}>
+                            <label className="form-label">Senha</label>
+                            <div style={{ position: 'relative' }}>
+                                <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                <input 
+                                    type="password" 
+                                    className="input-field" 
+                                    style={{ paddingLeft: '48px' }} 
+                                    placeholder="••••••••" 
+                                    required 
+                                    value={authFormData.password} 
+                                    onChange={e => setAuthFormData({ ...authFormData, password: e.target.value })} 
+                                />
+                            </div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="premium-button" 
+                            style={{ width: '100%', justifyContent: 'center', height: '56px' }}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Autenticando...' : 'Acessar Cockpit'}
+                        </button>
+                    </form>
+                </motion.div>
+            </div>
+        );
+    }
+
     const removeFile = (fileId, type = 'log') => {
         const currentRequest = requests.find(r => r.id === selectedFlightForLog.id);
         if (currentRequest) {
@@ -107,6 +187,10 @@ export default function CrewPortal({ requests = [], onUpdateRequest }) {
 
     // Filter and sort requests
     const filteredRequests = requests.filter(req => {
+        // First, check if current crew is assigned to this flight
+        const isAssigned = req.crew_assignment?.some(c => c.id === currentUser.id || c.name === currentUser.name);
+        if (!isAssigned) return false;
+
         const matchesSearch =
             req.aircraft?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             req.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,7 +236,7 @@ export default function CrewPortal({ requests = [], onUpdateRequest }) {
                     <h1 style={{ fontSize: '3rem', margin: 0, fontWeight: '800' }}>Cockpit Operacional</h1>
                     <p style={{ color: 'var(--text-muted)', margin: '8px 0 0 0' }}>Painel exclusivo para tripulação e controle de voo.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <div className="glass-morphism" style={{ padding: '12px 24px', borderRadius: '16px', textAlign: 'center' }}>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Voos Hoje</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>
@@ -165,6 +249,19 @@ export default function CrewPortal({ requests = [], onUpdateRequest }) {
                             {filteredRequests.length}
                         </div>
                     </div>
+                    <button 
+                        onClick={onLogout}
+                        className="premium-button"
+                        style={{ 
+                            background: 'rgba(248, 113, 113, 0.1)', 
+                            color: '#f87171', 
+                            border: '1px solid rgba(248, 113, 113, 0.2)',
+                            height: '56px',
+                            padding: '0 20px'
+                        }}
+                    >
+                        <LogOut size={18} />
+                    </button>
                 </div>
             </div>
 
@@ -631,6 +728,50 @@ export default function CrewPortal({ requests = [], onUpdateRequest }) {
                                                 </div>
                                                 <div style={{ fontSize: '0.9rem', color: '#fff', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
                                                     {leg.catering || 'Catering padrão solicitado.'}
+                                                </div>
+                                            </div>
+
+                                            {/* Fuel Section */}
+                                            <div style={{ background: 'rgba(34, 197, 94, 0.03)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(34, 197, 94, 0.05)' }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <DollarSign size={16} /> COMBUSTÍVEL:
+                                                </div>
+                                                <div style={{ fontSize: '0.9rem', color: '#fff' }}>
+                                                    <p style={{ margin: '0 0 8px 0', fontSize: '1rem', color: 'var(--primary)' }}>{leg.fuelLocation || leg.origin || 'Não informado'}</p>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        {leg.fuelShell && <p style={{ margin: 0 }}>Shell: <span style={{ color: 'var(--primary)' }}>R$ {leg.fuelShell}</span></p>}
+                                                        {leg.fuelBR && <p style={{ margin: 0 }}>BR: <span style={{ color: 'var(--primary)' }}>R$ {leg.fuelBR}</span></p>}
+                                                        {leg.fuelAirBp && <p style={{ margin: 0 }}>AirBp: <span style={{ color: 'var(--primary)' }}>R$ {leg.fuelAirBp}</span></p>}
+                                                        {leg.fuelSign && <p style={{ margin: '4px 0 0 0', fontStyle: 'italic', opacity: 0.6 }}>*{leg.fuelSign}*</p>}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Hotel Section */}
+                                            <div style={{ background: 'rgba(255, 193, 7, 0.03)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255, 193, 7, 0.05)' }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Calendar size={16} /> HOTEL:
+                                                </div>
+                                                <div style={{ fontSize: '0.9rem', color: '#fff' }}>
+                                                    {leg.hasHotel !== false ? (
+                                                        <>
+                                                            <div style={{ 
+                                                                padding: '4px 10px', 
+                                                                borderRadius: '4px', 
+                                                                background: leg.hotelStatus === 'reservado' ? '#22c55e' : '#ef4444',
+                                                                display: 'inline-block',
+                                                                fontSize: '0.7rem',
+                                                                fontWeight: 'bold',
+                                                                marginBottom: '8px'
+                                                            }}>
+                                                                {(leg.hotelStatus || 'PENDENTE').toUpperCase()}
+                                                            </div>
+                                                            {leg.hotelName && <p style={{ margin: '0 0 4px 0', fontSize: '1rem' }}>{leg.hotelName}</p>}
+                                                            {leg.hotelDetails && <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>{leg.hotelDetails}</p>}
+                                                        </>
+                                                    ) : (
+                                                        <p style={{ margin: 0, opacity: 0.6 }}>Não necessário / Não solicitado</p>
+                                                    )}
                                                 </div>
                                             </div>
 
